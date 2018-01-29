@@ -18,4 +18,3 @@ e21ba1,::1,GET,http://localhost/Symfony/web/app_dev.php/_profiler/20dd4d,1516979
 c5c1e6,::1,GET,http://localhost/Symfony/web/app_dev.php/,1517159839,,200
 601407,::1,GET,http://localhost/Symfony/web/app_dev.php/_profiler,1517227230,,301
 63dc05,::1,GET,http://localhost/Symfony/web/app_dev.php/,1517227236,,200
-cde9cb,127.0.0.1,GET,http://127.0.0.1:8000/,1517232338,,200

@@ -1,9 +1,0 @@
-/docker-compose.override.yml
-/node_modules/
-/phpunit.xml
-/var/*
-!/var/.gitkeep
-/vendor/
-/web/assets/
-/web/bundles/
-/.php_cs.cache
