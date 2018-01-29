@@ -19,3 +19,5 @@ c5c1e6,::1,GET,http://localhost/Symfony/web/app_dev.php/,1517159839,,200
 601407,::1,GET,http://localhost/Symfony/web/app_dev.php/_profiler,1517227230,,301
 63dc05,::1,GET,http://localhost/Symfony/web/app_dev.php/,1517227236,,200
 eaacc4,127.0.0.1,GET,http://127.0.0.1:8000/,1517233906,,200
+95bb95,127.0.0.1,GET,http://127.0.0.1:8000/,1517233992,,200
+a9ef82,127.0.0.1,GET,http://127.0.0.1:8000/,1517234037,,200
