@@ -13,6 +13,7 @@ namespace Symfony\Component\Serializer\Normalizer;
 
 use Symfony\Component\PropertyAccess\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Exception\CircularReferenceException;
 use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 use Symfony\Component\Serializer\Exception\LogicException;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
@@ -31,6 +32,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
 {
     const ENABLE_MAX_DEPTH = 'enable_max_depth';
     const DEPTH_KEY_PATTERN = 'depth_%s::%s';
+    const ALLOW_EXTRA_ATTRIBUTES = 'allow_extra_attributes';
 
     private $propertyTypeExtractor;
     private $attributesCache = array();
@@ -52,6 +54,8 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
 
     /**
      * {@inheritdoc}
+     *
+     * @throws CircularReferenceException
      */
     public function normalize($object, $format = null, array $context = array())
     {
@@ -126,10 +130,6 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
             return $allowedAttributes;
         }
 
-        if (isset($context['attributes'])) {
-            return $this->extractAttributes($object, $format, $context);
-        }
-
         if (isset($this->attributesCache[$class])) {
             return $this->attributesCache[$class];
         }
@@ -189,7 +189,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
                 $attribute = $this->nameConverter->denormalize($attribute);
             }
 
-            if ((false !== $allowedAttributes && !in_array($attribute, $allowedAttributes)) || !$this->isAllowedAttribute($class, $attribute, $format, $context)) {
+            if (($allowedAttributes !== false && !in_array($attribute, $allowedAttributes)) || !$this->isAllowedAttribute($class, $attribute, $format, $context)) {
                 if (isset($context[self::ALLOW_EXTRA_ATTRIBUTES]) && !$context[self::ALLOW_EXTRA_ATTRIBUTES]) {
                     $extraAttributes[] = $attribute;
                 }

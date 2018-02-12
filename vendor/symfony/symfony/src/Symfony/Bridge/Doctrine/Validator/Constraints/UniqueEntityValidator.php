@@ -26,6 +26,9 @@ use Symfony\Component\Validator\ConstraintValidator;
  */
 class UniqueEntityValidator extends ConstraintValidator
 {
+    /**
+     * @var ManagerRegistry
+     */
     private $registry;
 
     public function __construct(ManagerRegistry $registry)
@@ -58,10 +61,6 @@ class UniqueEntityValidator extends ConstraintValidator
 
         if (0 === count($fields)) {
             throw new ConstraintDefinitionException('At least one field has to be specified.');
-        }
-
-        if (null === $entity) {
-            return;
         }
 
         if ($constraint->em) {

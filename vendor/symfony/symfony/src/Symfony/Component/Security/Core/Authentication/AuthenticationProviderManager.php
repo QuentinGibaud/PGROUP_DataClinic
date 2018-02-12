@@ -35,6 +35,8 @@ class AuthenticationProviderManager implements AuthenticationManagerInterface
     private $eventDispatcher;
 
     /**
+     * Constructor.
+     *
      * @param iterable|AuthenticationProviderInterface[] $providers        An iterable with AuthenticationProviderInterface instances as values
      * @param bool                                       $eraseCredentials Whether to erase credentials after authentication or not
      *
@@ -79,9 +81,9 @@ class AuthenticationProviderManager implements AuthenticationManagerInterface
                     break;
                 }
             } catch (AccountStatusException $e) {
-                $lastException = $e;
+                $e->setToken($token);
 
-                break;
+                throw $e;
             } catch (AuthenticationException $e) {
                 $lastException = $e;
             }

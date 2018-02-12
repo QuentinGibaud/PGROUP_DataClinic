@@ -221,17 +221,12 @@ class ErrorHandlerTest extends TestCase
 
             $logger = $this->getMockBuilder('Psr\Log\LoggerInterface')->getMock();
 
-            $line = null;
-            $logArgCheck = function ($level, $message, $context) use (&$line) {
+            $logArgCheck = function ($level, $message, $context) {
                 $this->assertEquals('Notice: Undefined variable: undefVar', $message);
                 $this->assertArrayHasKey('exception', $context);
                 $exception = $context['exception'];
                 $this->assertInstanceOf(SilencedErrorContext::class, $exception);
                 $this->assertSame(E_NOTICE, $exception->getSeverity());
-                $this->assertSame(__FILE__, $exception->getFile());
-                $this->assertSame($line, $exception->getLine());
-                $this->assertNotEmpty($exception->getTrace());
-                $this->assertSame(1, $exception->count);
             };
 
             $logger
@@ -244,7 +239,6 @@ class ErrorHandlerTest extends TestCase
             $handler->setDefaultLogger($logger, E_NOTICE);
             $handler->screamAt(E_NOTICE);
             unset($undefVar);
-            $line = __LINE__ + 1;
             @$undefVar++;
 
             restore_error_handler();
@@ -301,9 +295,6 @@ class ErrorHandlerTest extends TestCase
         @$handler->handleError(E_USER_DEPRECATED, 'Foo deprecation', __FILE__, __LINE__, array());
     }
 
-    /**
-     * @group no-hhvm
-     */
     public function testHandleException()
     {
         try {
@@ -425,9 +416,6 @@ class ErrorHandlerTest extends TestCase
         $handler->setLoggers(array(E_DEPRECATED => array($mockLogger, LogLevel::WARNING)));
     }
 
-    /**
-     * @group no-hhvm
-     */
     public function testSettingLoggerWhenExceptionIsBuffered()
     {
         $bootLogger = new BufferingLogger();
@@ -447,9 +435,6 @@ class ErrorHandlerTest extends TestCase
         $handler->handleException($exception);
     }
 
-    /**
-     * @group no-hhvm
-     */
     public function testHandleFatalError()
     {
         try {
@@ -508,9 +493,6 @@ class ErrorHandlerTest extends TestCase
         $this->assertStringStartsWith("Attempted to load class \"Foo\" from the global namespace.\nDid you forget a \"use\" statement", $args[0]->getMessage());
     }
 
-    /**
-     * @group no-hhvm
-     */
     public function testHandleFatalErrorOnHHVM()
     {
         try {
