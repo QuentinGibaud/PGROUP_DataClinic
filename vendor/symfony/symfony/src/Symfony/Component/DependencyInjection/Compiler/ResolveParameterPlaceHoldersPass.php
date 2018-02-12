@@ -39,7 +39,7 @@ class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
             $aliases = array();
             foreach ($container->getAliases() as $name => $target) {
                 $this->currentId = $name;
-                $aliases[$this->bag->resolveValue($name)] = $target;
+                $aliases[$this->bag->resolveValue($name)] = $this->bag->resolveValue($target);
             }
             $container->setAliases($aliases);
         } catch (ParameterNotFoundException $e) {
@@ -65,14 +65,10 @@ class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
             if (isset($changes['file'])) {
                 $value->setFile($this->bag->resolveValue($value->getFile()));
             }
+            $value->setProperties($this->bag->resolveValue($value->getProperties()));
+            $value->setMethodCalls($this->bag->resolveValue($value->getMethodCalls()));
         }
 
-        $value = parent::processValue($value, $isRoot);
-
-        if ($value && is_array($value)) {
-            $value = array_combine($this->bag->resolveValue(array_keys($value)), $value);
-        }
-
-        return $value;
+        return parent::processValue($value, $isRoot);
     }
 }

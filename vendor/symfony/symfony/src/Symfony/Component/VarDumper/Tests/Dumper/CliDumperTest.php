@@ -130,36 +130,6 @@ EOTXT
         $this->assertSame($expected, $dump);
     }
 
-    public function testDumpWithCommaFlagsAndExceptionCodeExcerpt()
-    {
-        $dumper = new CliDumper(null, null, CliDumper::DUMP_TRAILING_COMMA);
-        $dumper->setColors(false);
-        $cloner = new VarCloner();
-
-        $ex = new \RuntimeException('foo');
-
-        $dump = $dumper->dump($cloner->cloneVar($ex)->withRefHandles(false), true);
-
-        $this->assertStringMatchesFormat(<<<'EOTXT'
-RuntimeException {
-  #message: "foo"
-  #code: 0
-  #file: "%ACliDumperTest.php"
-  #line: %d
-  trace: {
-    %ACliDumperTest.php:%d: {
-      : 
-      : $ex = new \RuntimeException('foo');
-      : 
-    }
-    %A
-  }
-}
-
-EOTXT
-            , $dump);
-    }
-
     public function provideDumpWithCommaFlagTests()
     {
         $expected = <<<'EOTXT'
@@ -230,22 +200,8 @@ EOTXT
         $var[] = &$v;
         $var[''] = 2;
 
-        if (\PHP_VERSION_ID >= 70200) {
-            $this->assertDumpMatchesFormat(
-                <<<'EOTXT'
-array:4 [
-  0 => {}
-  1 => &1 null
-  2 => &1 null
-  "" => 2
-]
-EOTXT
-                ,
-                $var
-            );
-        } else {
-            $this->assertDumpMatchesFormat(
-                <<<'EOTXT'
+        $this->assertDumpMatchesFormat(
+            <<<'EOTXT'
 array:4 [
   "0" => {}
   "1" => &1 null
@@ -253,10 +209,9 @@ array:4 [
   "" => 2
 ]
 EOTXT
-                ,
-                $var
-            );
-        }
+            ,
+            $var
+        );
     }
 
     public function testObjectCast()
@@ -264,28 +219,16 @@ EOTXT
         $var = (object) array(1 => 1);
         $var->{1} = 2;
 
-        if (\PHP_VERSION_ID >= 70200) {
-            $this->assertDumpMatchesFormat(
-                <<<'EOTXT'
-{
-  +"1": 2
-}
-EOTXT
-                ,
-                $var
-            );
-        } else {
-            $this->assertDumpMatchesFormat(
-                <<<'EOTXT'
+        $this->assertDumpMatchesFormat(
+            <<<'EOTXT'
 {
   +1: 1
   +"1": 2
 }
 EOTXT
-                ,
-                $var
-            );
-        }
+            ,
+            $var
+        );
     }
 
     public function testClosedResource()

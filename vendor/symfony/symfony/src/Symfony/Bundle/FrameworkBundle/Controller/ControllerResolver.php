@@ -17,12 +17,21 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\HttpKernel\Controller\ContainerControllerResolver;
 
 /**
+ * ControllerResolver.
+ *
  * @author Fabien Potencier <fabien@symfony.com>
  */
 class ControllerResolver extends ContainerControllerResolver
 {
     protected $parser;
 
+    /**
+     * Constructor.
+     *
+     * @param ContainerInterface   $container A ContainerInterface instance
+     * @param ControllerNameParser $parser    A ControllerNameParser instance
+     * @param LoggerInterface      $logger    A LoggerInterface instance
+     */
     public function __construct(ContainerInterface $container, ControllerNameParser $parser, LoggerInterface $logger = null)
     {
         $this->parser = $parser;
@@ -40,19 +49,7 @@ class ControllerResolver extends ContainerControllerResolver
             $controller = $this->parser->parse($controller);
         }
 
-        $resolvedController = parent::createController($controller);
-
-        if (1 === substr_count($controller, ':') && is_array($resolvedController)) {
-            if ($resolvedController[0] instanceof ContainerAwareInterface) {
-                $resolvedController[0]->setContainer($this->container);
-            }
-
-            if ($resolvedController[0] instanceof AbstractController && null !== $previousContainer = $resolvedController[0]->setContainer($this->container)) {
-                $resolvedController[0]->setContainer($previousContainer);
-            }
-        }
-
-        return $resolvedController;
+        return parent::createController($controller);
     }
 
     /**

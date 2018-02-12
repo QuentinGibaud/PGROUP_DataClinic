@@ -25,11 +25,10 @@ trait PhpFilesTrait
     use FilesystemCommonTrait;
 
     private $includeHandler;
-    private $zendDetectUnicode;
 
     public static function isSupported()
     {
-        return function_exists('opcache_invalidate') && ini_get('opcache.enable');
+        return function_exists('opcache_compile_file') && ini_get('opcache.enable');
     }
 
     /**
@@ -40,9 +39,6 @@ trait PhpFilesTrait
         $values = array();
         $now = time();
 
-        if ($this->zendDetectUnicode) {
-            $zmb = ini_set('zend.detect_unicode', 0);
-        }
         set_error_handler($this->includeHandler);
         try {
             foreach ($ids as $id) {
@@ -58,9 +54,6 @@ trait PhpFilesTrait
             }
         } finally {
             restore_error_handler();
-            if ($this->zendDetectUnicode) {
-                ini_set('zend.detect_unicode', $zmb);
-            }
         }
 
         foreach ($values as $id => $value) {
@@ -115,7 +108,7 @@ trait PhpFilesTrait
             $ok = $this->write($file, '<?php return '.var_export($data, true).';') && $ok;
 
             if ($allowCompile) {
-                @opcache_invalidate($file, true);
+                @opcache_compile_file($file);
             }
         }
 
