@@ -6,8 +6,16 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
-class DefaultController extends Controller
+class HomeController extends Controller
 {
+    /**
+     * @Route("/", name="defaultpage")
+     */
+    public function redirectAction(Request $request)
+    {
+       return $this->redirectToRoute('homepage');
+    }
+
     /**
      * @Route("/", name="homepage")
      */
