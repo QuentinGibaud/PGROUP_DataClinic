@@ -6,3 +6,6 @@ page:
         description1: La clinique des données du CHU de Nantes regroupe plusieurs services, notamment plusieurs pôles de santé publique (dont l’université) et l’unité épidémiologique. C’est un pôle d’experts sur les données (méthodes d’analyse et de traitements) qui apporte un soutien aux hospitaliers faisant de la recherche, appelés "investigateurs". Leur but est d’augmenter la rapidité des recherches et des publications.
         description2: La clinique des données permet également d’apporter des données extérieures autres que les données patient, comme par exemple des données météorologiques, pollution de l’air…
         title: Clinique des données
+    nav:
+        home: Accueil
+        form: Formulaire

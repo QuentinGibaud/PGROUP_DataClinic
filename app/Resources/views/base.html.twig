@@ -10,7 +10,23 @@
         {% endblock %}
     </head>
     <body class="{% block body_class %}{% endblock %}">
-        {% block body %}{% endblock %}
+        {% block header %}
+             <header>
+                <div class"block">
+                    <div class="img_container">
+                        <img id="logo_inserm" src="img/INSERM.png" alt="Logo de la clinique des données" height="75" />
+                    </div>
+                </div>
+            </header>
+        {% endblock %}
+        {% block nav %}
+             <nav>
+                <a id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a>
+                <a id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
+            </nav>
+        {% endblock %}
+        {% block body %}
+        {% endblock %}
         {% block javascripts %}
             <script src="{{ asset('js/app.js') }}"></script>
         {% endblock %}
