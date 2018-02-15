@@ -9,11 +9,18 @@ use Symfony\Component\HttpFoundation\Request;
 class HomeController extends Controller
 {
     /**
+     * @Route("/", name="defaultpage")
+     */
+    public function redirectAction(Request $request)
+    {
+        return $this->redirectToRoute('homepage');
+    }
+
+    /**
      * @Route("/home", name="homepage")
      */
     public function indexAction(Request $request)
     {
-        // replace this example code with whatever you need
         return $this->render('index.html.twig');
     }
 }
