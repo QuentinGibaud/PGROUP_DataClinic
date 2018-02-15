@@ -12,17 +12,21 @@
     <body class="{% block body_class %}{% endblock %}">
         {% block header %}
              <header>
-                <div class"block">
+                <div class="block">
                     <div class="img_container">
-                        <img id="logo_inserm" src="img/INSERM.png" alt="Logo de la clinique des données" height="75" />
+                        <img class="logo" src="img/INSERM.png" alt="Logo de la clinique des données"/>
+                        <img class="logo" src="img/Logo_CHU_Nantes.svg.png" alt="Logo de la clinique des données"/>
                     </div>
                 </div>
             </header>
         {% endblock %}
         {% block nav %}
              <nav>
-                <a id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a>
-                <a id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
+                <p><b>Clinique des données</b></p>
+                <p>|</p>
+                <a class="menu" id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a>
+                <p>|</p>
+                <a class="menu" id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
             </nav>
         {% endblock %}
         {% block body %}

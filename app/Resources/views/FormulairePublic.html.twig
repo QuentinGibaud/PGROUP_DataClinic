@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr-fr">
+    <head>
+        <title>Formulaire : demande de contact</title>
+        <meta charset="UTF-8" />
+        <meta name="Author" content="PGROUP Data Clinic" />
+        <meta name="Description" content="Formulaire pour demande d'aide à la Data Clinic de Nantes" />
+        <meta name="Keyword" content="Formulaire" />
+        <link rel="stylesheet" href="{{ asset('css/Formulaire.css') }}" rel="stylesheet">
+        <!--link href="Formulaire.css" rel="stylesheet" type="text/css" /-->
+    </head>
+    <body>
+        <h1>Formulaire de demande</h1>
+        <form>
+            <h2>Interlocuteur</h2>
+            <p>Titre</p>
+            <input type="text" name="titreInt" size="40"/>
+            <p>Nom</p>
+            <input type="text" name="nomInt" size="40"/>
+            <p>Prénom</p>
+            <input type="text" name="prenomInt" size="40"/>
+            <p>Fonction</p>
+            <input type="text" name="fonctionInt" size="40"/>
+            <p>Téléphone</p>
+            <input type="text" name="telInt" size="40"/>
+            <p>Mail</p>
+            <input type="text" name="mailInt" size="40"/>
+            <p>Etablissement</p>
+            <select name="etabInt">
+                <option value="chu_nantes">CHU de Nantes</option>
+                <option value="ecn">Ecole Centrale de Nantes</option>
+                <option value="chu_lyon">CHU de Lyon</option>
+            </select>
+            <p>Service/équipe</p>
+            <input type="text" name="serviceInt" size="40"/>
+            <h2>Investigateur principal</h2>
+            <p>Titre</p>
+            <input type="text" name="titreInv" size="40"/>
+            <p>Nom</p>
+            <input type="text" name="nomInv" size="40"/>
+            <p>Prénom</p>
+            <input type="text" name="prenomInv" size="40"/>
+            <h2>Projet</h2>
+            <p>Titre du projet</p>
+            <input type="text" name="titreProjet" size="100"/>
+            <p>Acronyme du projet</p>
+            <input type="text" name="acroProjet" size="20"/>
+            <p>Résumé du projet</p>
+            <textarea name="resumeProjet" rows="15" cols="100">
+                Texte par défaut
+            </textarea>
+            <p>
+            <input class="button" type="submit" name="validate" value="Valider" />
+            <input class="button" type="reset" name="reset" value="Réinitialiser" />
+            </p>
+        </form>
+    </body>
+</html>
