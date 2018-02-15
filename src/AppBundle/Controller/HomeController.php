@@ -13,15 +13,14 @@ class HomeController extends Controller
      */
     public function redirectAction(Request $request)
     {
-       return $this->redirectToRoute('homepage');
+        return $this->redirectToRoute('homepage');
     }
 
     /**
-     * @Route("/", name="homepage")
+     * @Route("/home", name="homepage")
      */
     public function indexAction(Request $request)
     {
-        // replace this example code with whatever you need
-        return $this->render('default/index.html.twig');
+        return $this->render('index.html.twig');
     }
 }
