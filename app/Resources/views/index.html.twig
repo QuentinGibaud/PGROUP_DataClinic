@@ -1,17 +1,6 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <header>
-        <div class"block">
-            <div class="img_container">
-                <img id="logo_inserm" src="img/INSERM.png" alt="Logo de la clinique des données" height="75" />
-            </div>
-        </div>
-    </header>
-    <nav>
-        <p>Accueil</p>
-        <p>Formulaire</p>
-    </nav>
     <div class="wrapper">
         <div class="container">
             <h1>{{ 'page.home.title'|trans }}</h1>
@@ -19,5 +8,4 @@
             <div>{{ 'page.home.description2'|trans|raw }}</div>
         </div>
     </div>
-
 {% endblock %}
