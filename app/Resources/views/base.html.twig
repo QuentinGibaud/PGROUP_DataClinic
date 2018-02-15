@@ -11,9 +11,8 @@
     </head>
     <body class="{% block body_class %}{% endblock %}">
         {% block body %}{% endblock %}
-        <!-- img src="INSERM.png" alt="Logo de la clinique des données"></img-->
         {% block javascripts %}
-            <script src="{{ asset('front/js/app.js') }}"></script>
+            <script src="{{ asset('js/app.js') }}"></script>
         {% endblock %}
     </body>
 </html>

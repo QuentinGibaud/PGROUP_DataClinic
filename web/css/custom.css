@@ -2,6 +2,41 @@ body {
     background: #F5F5F5; font: 18px/1.5 sans-serif;
 }
 
+header {
+    display: block;
+    height:100px;
+    background-color:blue;
+    visibility: visible;
+}
+
+nav {
+    text-align: center
+}
+
+nav p {
+    display: inline;
+}
+
+.block {
+  text-align: center;
+
+  /* May want to do this if there is risk the container may be narrower than the element inside */
+  white-space: nowrap;
+}
+ 
+/* The ghost, nudged to maintain perfect centering */
+.block:before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.img_container{
+    display: inline-block;
+    vertical-align: middle;
+}
+
 h1, h2 {
     line-height: 1.2; margin: 0 0 .5em;
 }
