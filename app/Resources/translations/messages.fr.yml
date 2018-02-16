@@ -7,5 +7,6 @@ page:
         description2: La clinique des données permet également d’apporter des données extérieures autres que les données patient, comme par exemple des données météorologiques, pollution de l’air…
         title: Clinique des données
     nav:
+        title: Clinique des données
         home: Accueil
         form: Formulaire
