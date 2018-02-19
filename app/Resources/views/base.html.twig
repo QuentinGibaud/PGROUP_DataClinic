@@ -12,22 +12,20 @@
     <body class="{% block body_class %}{% endblock %}">
         {% block header %}
              <header>
-                <div class="block">
-                    <div class="img_container">
-                        <img class="logo" src="img/Logo_CHU_Nantes.svg.png" alt="Logo du CHU"/>
-                        <img class="logo" src="img/INSERM.png" alt="Logo de l'INSERM'"/>
-                        <img class="logo" src="img/LogoCIC.png" alt="Logo du CIC"/>
-                    </div>
+                <div id="img_banner">
+                    <img class="logo" src="img/Logo_CHU_Nantes.svg.png" alt="Logo du CHU"/>
+                    <img class="logo" src="img/INSERM_transparent.png" alt="Logo de l'INSERM'"/>
+                    <img class="logo" src="img/LogoCIC.png" alt="Logo du CIC"/>
                 </div>
+                <h1 id="header_title">
+                    {{ 'page.nav.title'|trans }}
+                </h1>
             </header>
         {% endblock %}
         {% block nav %}
-             <nav>
-                <p><b>{{ 'page.nav.title'|trans }}</b></p>
-                <p>|</p>
-                <a class="menu" id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a>
-                <p>|</p>
-                <a class="menu" id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
+            <nav>
+                <a class="menu" id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a><!--
+                --><a class="menu" id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
             </nav>
         {% endblock %}
         {% block body %}
