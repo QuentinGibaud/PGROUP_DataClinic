@@ -72,8 +72,13 @@ iframe {
     background: #FFF; margin: 1em auto; width: 60%;
 }
 
-.home_title{
+#home_title{
     text-align: center;
+    padding: 0em 0 2.5em;
+}
+
+#home_title h1{
+    margin: 0;
 }
 
 .container{
