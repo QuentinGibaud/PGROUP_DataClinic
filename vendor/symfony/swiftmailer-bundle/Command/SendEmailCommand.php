@@ -26,20 +26,23 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class SendEmailCommand extends ContainerAwareCommand
 {
+    protected static $defaultName = 'swiftmailer:spool:send';
+
     /** @var SymfonyStyle */
     private $io;
 
     protected function configure()
     {
         $this
-            ->setName('swiftmailer:spool:send')
+            ->setName(static::$defaultName) // BC with 2.7
             ->setDescription('Sends emails from the spool')
             ->addOption('message-limit', null, InputOption::VALUE_REQUIRED, 'The maximum number of messages to send.')
             ->addOption('time-limit', null, InputOption::VALUE_REQUIRED, 'The time limit for sending messages (in seconds).')
             ->addOption('recover-timeout', null, InputOption::VALUE_REQUIRED, 'The timeout for recovering messages that have taken too long to send (in seconds).')
             ->addOption('mailer', null, InputOption::VALUE_REQUIRED, 'The mailer name.')
             ->addOption('transport', null, InputOption::VALUE_REQUIRED, 'The service of the transport to use to send the messages.')
-            ->setHelp(<<<EOF
+            ->setHelp(
+                <<<EOF
 The <info>%command.name%</info> command sends all emails from the spool.
 
 <info>php %command.full_name% --message-limit=10 --time-limit=10 --recover-timeout=900 --mailer=default</info>

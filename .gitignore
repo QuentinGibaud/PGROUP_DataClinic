@@ -4,6 +4,4 @@
 /var/*
 !/var/.gitkeep
 /vendor/
-/web/assets/
-/web/bundles/
 /.php_cs.cache
