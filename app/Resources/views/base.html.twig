@@ -17,16 +17,19 @@
                     <img class="logo" src="img/INSERM_transparent.png" alt="Logo de l'INSERM'"/>
                     <img class="logo" src="img/LogoCIC.png" alt="Logo du CIC"/>
                 </div>
-                <h1 id="header_title">
-                    {{ 'page.nav.title'|trans }}
-                </h1>
+                <img id="title_logo" src="img/ClinDon_blue.png" alt="Clinique de données"/>
             </header>
         {% endblock %}
         {% block nav %}
-            <nav>
-                <a class="menu" id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a><!--
-                --><a class="menu" id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
-            </nav>
+            <div id="nav_banner">
+                <div id="nav_banner_up">
+                </div>
+                <nav>
+                    <a class="menu" id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a>
+                    |
+                    <a class="menu" id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
+                </nav>
+            </div>
         {% endblock %}
         {% block body %}
         {% endblock %}
