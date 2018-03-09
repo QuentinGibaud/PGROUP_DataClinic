@@ -3,17 +3,10 @@
 {% block body %}
     <div class="wrapper">
         <div class="container">
-            <div id="home_title">
-              <h1>{{ 'page.home.title.line1'|trans }}</h1>
-              <h1>{{ 'page.home.title.line2'|trans }}</h1>
-            </div>  
-            <div>{{ 'page.home.description1'|trans|raw }}</div>
-            <ul>
-              <li>{{ 'page.home.item1'|trans }}</li>
-              <li>{{ 'page.home.item2'|trans }}</li>
-              <li>{{ 'page.home.item2'|trans }}</li>
-            </ul>
-            <div>{{ 'page.home.description2'|trans|raw }}</div>
+            <div class="home-title">
+              <h1 class="no-margin">{{ 'page.home.title'|trans|raw }}</h1>
+            </div>
+            <div>{{ 'page.home.description'|trans|raw }}</div>
         </div>
     </div>
 {% endblock %}

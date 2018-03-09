@@ -9,11 +9,13 @@ use Symfony\Component\HttpFoundation\Request;
 class FormController extends Controller
 {
     /**
-     * @Route("/form", name="form")
+     * @Route(
+     *    "/demande",
+     *    name="app.request"
+     * )
      */
     public function indexAction(Request $request)
     {
-        // replace this example code with whatever you need
         return $this->render('form.html.twig');
     }
 }

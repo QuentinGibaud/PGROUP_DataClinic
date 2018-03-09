@@ -8,9 +8,6 @@ html, body {
 
 h1 {
     line-height: 1.2; margin: 0 0 .5em;
-}
-
-h1 {
     font-size: 36px;
 }
 
@@ -22,7 +19,12 @@ header {
     padding-top: 1em;
 }
 
-#img_banner {
+.wrapper {
+    height: 100%;
+    background-color: #F9F9F9;
+}
+
+.img-banner {
     text-align: center;
     height: 110px;
     padding: 1em;
@@ -36,7 +38,7 @@ header {
     margin-left: 20px;
 }
 
-#header_title {
+.header-title {
     font-weight: bold;
     font-size: 30px;
     padding: 0.5em;
@@ -68,16 +70,12 @@ iframe {
     width: 100%;
 }
 
-.wrapper {
-    background: #FFF; margin: 1em auto; width: 60%;
-}
-
-#home_title{
+.home-title{
     text-align: center;
     padding: 0em 0 2.5em;
 }
 
-#home_title h1{
+.no-margin {
     margin: 0;
 }
 
@@ -88,14 +86,6 @@ iframe {
 }
 
 @media (min-width: 768px) {
-    .wrapper, .iframe_wrapper{
-        width: 60%; margin: 2em auto;
-    }
-
-    .iframe_wrapper {
-        height: 100%;
-    }
-
     @-webkit-keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
     @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
     .sf-toolbar { opacity: 0; -webkit-animation: fade-in 1s .2s forwards; animation: fade-in 1s .2s forwards;}
