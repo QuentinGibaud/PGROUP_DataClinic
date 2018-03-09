@@ -6,6 +6,13 @@ menu:
     form: Demande
 
 page:
+    footer:
+        useTerms : CGU
+        legal: Mentions légales
     home:
         description: La compréhension et la qualité des données sont un enjeu croissant à mesure que la disponibilité technique est résolue par les outils numériques. La clinique des données a ainsi été créée pour assurer un renforcement de l’accompagnement de l’exploitation épidémiologique des données produites au sein du CHU de Nantes. Grâce à ce portail de demandes vous allez pouvoir accéder aux 3 grands types d’activités proposés par la clinique des données :<ul><li>des consultations d’épidémiologie clinique pour faciliter la maturation des questions, le traitement des données et leur extraction qu’elles soient issues de cohortes, de l’entrepôt de données hospitalières et des bases de données nationales ;</li><li>un accueil en Open-Space (sur le site Hôtel-Dieu) pour travailler en autonomie, avec des outils logiciels mis à disposition, sur son projet de recherche sur données avec l’accompagnement direct des experts métiers de la clinique des données ;</li><li>des formations présentielles ou distantielles, pratiques et théoriques, sur le traitement des données. En bonne coordination, avec la cellule RNI (Recherche Non Interventionnelle) de la DRCI, et le service d’information médicale (SIM), la clinique des données participera au développement des bonnes pratiques scientifiques et réglementaires.</li></ul>Le projet se veut différenciant en regroupant, à la clinique des données, diverses expertises en analyse des données et un accès aux données issues du soin. Ces compétences, au service des chercheurs médicaux et paramédicaux, a pour objectifs d’accompagner, former voire même autonomiser les chercheurs dans leurs analyses à partir des bases de données déjà constituées. L’objectif est de faire évoluer notre institution vers une forme collective et partagée de l’expertise pour mieux valoriser les données et leurs analyses.
         title: Portail des demandes de la<br>Clinique des données
+    legal:
+        title: Mentions légales
+    useTerms:
+        title: Conditions générales d'utilisation
