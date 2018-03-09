@@ -9,15 +9,21 @@ use Symfony\Component\HttpFoundation\Request;
 class HomeController extends Controller
 {
     /**
-     * @Route("/", name="defaultpage")
+     * @Route(
+     *    "/",
+     *    name="app.defaultPage"
+     * )
      */
     public function redirectAction(Request $request)
     {
-        return $this->redirectToRoute('homepage');
+        return $this->redirectToRoute('app.homepage');
     }
 
     /**
-     * @Route("/home", name="homepage")
+     * @Route(
+     *    "/accueil",
+     *    name="app.homepage"
+     * )
      */
     public function indexAction(Request $request)
     {

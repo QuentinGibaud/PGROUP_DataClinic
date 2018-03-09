@@ -1,11 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div class="iframe_wrapper">
+    <div class="wrapper">
         <div class="container">
-            <!--iframe src="https://www.ec-nantes.fr/"></iframe-->
-            <!--iframe src="{{ asset('html/FormulairePublic.html') }}"></iframe-->
-            <iframe src="{{ path('frame') }}"></iframe>
+            <iframe src="{{ path('app.iframeVoozanoo') }}"></iframe>
         </div>
     </div>
 {% endblock %}

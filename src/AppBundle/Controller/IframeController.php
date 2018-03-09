@@ -6,13 +6,16 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
-class FrameController extends Controller
+class IframeController extends Controller
 {
     /**
-     * @Route("/frame", name="frame")
+     * @Route(
+     *    "/demande-voozanoo",
+     *    name="app.iframeVoozanoo"
+     * )
      */
     public function indexAction(Request $request)
     {
-        return $this->render('FormulairePublic.html.twig');
+        return $this->render('public_form.html.twig');
     }
 }
