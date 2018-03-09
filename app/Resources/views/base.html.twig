@@ -2,12 +2,36 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}{% endblock %}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{{ 'app.title'|trans }}{% endblock %}</title>
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+        {% block stylesheets %}
+            <link rel="stylesheet" href="{{ asset('css/app.css') }}" rel="stylesheet">
+        {% endblock %}
     </head>
-    <body>
-        {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
+    <body class="{% block body_class %}{% endblock %}">
+        {% block header %}
+             <header>
+                <div id="img_banner">
+                    <img class="logo" src="img/Logo_CHU_Nantes.svg.png" alt="Logo du CHU"/>
+                    <img class="logo" src="img/INSERM_transparent.png" alt="Logo de l'INSERM'"/>
+                    <img class="logo" src="img/LogoCIC.png" alt="Logo du CIC"/>
+                </div>
+                <h1 id="header_title">
+                    {{ 'page.nav.title'|trans }}
+                </h1>
+            </header>
+        {% endblock %}
+        {% block nav %}
+            <nav>
+                <a class="menu" id="home" href="{{ path('homepage') }}">{{ 'page.nav.home'|trans }}</a><!--
+                --><a class="menu" id="form" href="{{ path('form') }}">{{ 'page.nav.form'|trans }}</a>
+            </nav>
+        {% endblock %}
+        {% block body %}
+        {% endblock %}
+        {% block javascripts %}
+            <script src="{{ asset('js/app.js') }}"></script>
+        {% endblock %}
     </body>
 </html>
