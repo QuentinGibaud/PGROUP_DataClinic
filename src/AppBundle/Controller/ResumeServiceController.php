@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
 use AppBundle\Service\ResumeService;
@@ -29,7 +30,8 @@ class ResumeServiceController extends Controller
     {
           $res=$resumeService->getResume();
           $zip=new \ZipArchive();
-          if($zip->open('Archive.zip', \ZipArchive::CREATE) === true)
+          $zipName = 'Resume_Projet_'.date("Y-m-d_H-i-s").'.zip';
+          if($zip->open($zipName, \ZipArchive::CREATE) === true)
           {
             foreach ($res as $row) {
               // Ajout direct.
@@ -43,32 +45,15 @@ class ResumeServiceController extends Controller
             echo 'Impossible d&#039;ouvrir &quot;Zip.zip<br/>';
           }
 
-          header('Content-Transfer-Encoding: binary'); //Transfert en binaire (fichier).
-          header('Content-Disposition: attachment; filename="Archive.zip"'); //Nom du fichier.
-          header('Content-Length: '.filesize('Archive.zip')); //Taille du fichier.
-          readfile('Archive.zip');
+          $response = new Response(readfile($zipName));
 
-          /*$content = $this->getFileContent($zip);
+          $disposition=$response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $zipName);
+          $response->headers->set('Content-Transfert-Encoding', 'binary');
+          $response->headers->set('Content-Type', 'application/zip');
+          $response->headers->set('Content-Disposition', $disposition);
+          $response->headers->set('Content-Length', filesize($zipName));
 
-          $response = new Response();
-
-          $response->setContent($content);
-
-          $response->headers->set('Content-Transfer-Encoding', 'binary');
-          $response->headers->set('Content-Disposition', 'attachment'; filename="Archive.zip");
-          $response->headers->set('Content-Length',filesize('Archive.zip'));
-          $response->headers->set('Content-Type', "application/force-download");
-          $response->headers->set('refresh', "1;".$this->generateUrl('app.homepage'));
-
-          return $response;*/
-
-          //return new RedirectResponse($this->router->generate('app.homepage'));
-
-          return $this->render('index.html.twig');
-        /*} else {
-          return $this->render('index.html.twig');
-        }
-      }*/
+          return $this->get('templating')->renderResponse('index.html.twig', array(), $response);
 
     }
 
