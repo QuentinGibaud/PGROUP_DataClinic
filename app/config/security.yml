@@ -30,3 +30,4 @@ security:
 
     access_control:
         - { path: ^/resume-projet, roles: ROLE_CHU }
+        - { path: ^/connexion-chu, roles: ROLE_CHU }
