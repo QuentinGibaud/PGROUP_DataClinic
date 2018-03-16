@@ -1,6 +1,8 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <a class="btn btn-success" href="{{ path('app.resume.projects') }}">{{ 'page.resumeProjects.button'|trans }}</a>
+    <form action="{{ path('app.resume.projects') }}" method="post">
+        <input class="btn btn-success" type="submit" value="{{ 'page.resumeProjects.button'|trans }}" />
+    </form>
     <div>{{ 'page.resumeProjects.helpText'|trans }}</div>
 {% endblock %}

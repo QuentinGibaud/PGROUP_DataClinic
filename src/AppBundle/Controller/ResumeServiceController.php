@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
 use AppBundle\Service\ResumeService;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 
 class ResumeServiceController extends Controller
 {
@@ -24,12 +25,22 @@ class ResumeServiceController extends Controller
     }
 
     /**
+    * @Route("/resume-projet")
+    * @Method({"GET"})
+    */
+    public function indexAction()
+    {
+          return $this->render('telecharger.html.twig');
+    }
+
+    /**
      * @Route(
      *    "/resume-projet",
      *    name="app.resume.projects"
      * )
+     * @Method({"POST"})
      */
-    public function indexAction(ResumeService $resumeService)
+    public function downloadAction(ResumeService $resumeService)
     {
           $res=$resumeService->getResume();
           $zip=new \ZipArchive();
