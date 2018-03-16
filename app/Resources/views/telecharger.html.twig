@@ -1,0 +1,6 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <a class="btn btn-success" href="{{ path('app.resume.projects') }}">{{ 'page.resumeProjects.button'|trans }}</a>
+    <div>{{ 'page.resumeProjects.helpText'|trans }}</div>
+{% endblock %}

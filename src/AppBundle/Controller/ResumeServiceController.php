@@ -24,8 +24,11 @@ class ResumeServiceController extends Controller
     }
 
     /**
-    * @Route("/resume-projet")
-    */
+     * @Route(
+     *    "/resume-projet",
+     *    name="app.resume.projects"
+     * )
+     */
     public function indexAction(ResumeService $resumeService)
     {
           $res=$resumeService->getResume();
