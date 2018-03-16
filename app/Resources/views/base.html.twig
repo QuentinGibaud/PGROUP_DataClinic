@@ -14,25 +14,32 @@
         {% endblock %}
     </head>
     <body class="{% block body_class %}{% endblock %}">
-        {% block header %}
-             <header>
-                <div class="img-banner">
-                    <img class="logo" src="img/Logo_CHU_Nantes.svg.png" alt="Logo du CHU"/>
-                    <img class="logo" src="img/INSERM_transparent.png" alt="Logo de l'INSERM'"/>
-                    <img class="logo" src="img/LogoCIC.png" alt="Logo du CIC"/>
-                </div>
-                <h1 class="header-title">{{ 'app.title'|trans }}</h1>
-            </header>
-        {% endblock %}
-        {% block nav %}
-            <nav>
-                <a class="menu" id="home" href="{{ path('app.homepage') }}">{{ 'menu.home'|trans }}</a>
-                <a class="menu" id="form" href="{{ path('app.request') }}">{{ 'menu.form'|trans }}</a>
-            </nav>
-        {% endblock %}
-        {% block body %}{% endblock %}
-        {% block javascripts %}
-            <script src="{{ asset('js/app.js') }}"></script>
+        {% block fit_container %}
+            <div class="fit-container">
+                {% block header %}
+                     <header>
+                        <div class="img-banner">
+                            <img class="logo" src="img/Logo_CHU_Nantes.svg.png" alt="Logo du CHU"/>
+                            <img class="logo" src="img/INSERM_transparent.png" alt="Logo de l'INSERM'"/>
+                            <img class="logo" src="img/LogoCIC.png" alt="Logo du CIC"/>
+                        </div>
+                        <h1 class="header-title">{{ 'app.title'|trans }}</h1>
+                    </header>
+                {% endblock %}
+                {% block nav %}
+                    <nav>
+                        <a class="menu" id="home" href="{{ path('app.homepage') }}">{{ 'menu.home'|trans }}</a>
+                        <a class="menu" id="form" href="{{ path('app.request') }}">{{ 'menu.form'|trans }}</a>
+                    </nav>
+                {% endblock %}
+                {% block body %}{% endblock %}
+                {% block push %}
+                    <div class="push"></div>
+                {% endblock %}
+                {% block javascripts %}
+                    <script src="{{ asset('js/app.js') }}"></script>
+                {% endblock %}
+            </div>
         {% endblock %}
         {% block footer %}{{ include('footer.html.twig') }}{% endblock %}
     </body>
