@@ -29,4 +29,4 @@ security:
             #form_login: ~
 
     access_control:
-        - { path: ^/soap, roles: ROLE_CHU }
+        - { path: ^/resume-projet, roles: ROLE_CHU }

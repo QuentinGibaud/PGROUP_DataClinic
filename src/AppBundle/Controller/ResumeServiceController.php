@@ -7,9 +7,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
-use AppBundle\Service\HelloService;
+use AppBundle\Service\ResumeService;
 
-class HelloServiceController extends Controller
+class ResumeServiceController extends Controller
 {
     /**
      * @var RouterInterface
@@ -23,27 +23,11 @@ class HelloServiceController extends Controller
     }
 
     /**
-    * @Route("/soap")
+    * @Route("/resume-projet")
     */
-    public function indexAction(HelloService $helloService)
+    public function indexAction(ResumeService $resumeService)
     {
-
-      /*$correctUser = "GetResume";
-      $correctPasswd = "Data@Clinic";
-      //On vérifie que la personne a les droits d'accès pour télécharger l'archive Zip
-      if (!isset($_SERVER['PHP_AUTH_USER'])) {
-        header('WWW-Authenticate: Basic realm="Entrez vos identifiants"');
-        header('HTTP/1.0 401 Unauthorized');
-        echo 'Texte utilisé si le visiteur utilise le bouton d\'annulation';
-        exit;
-      } elseif (($_SERVER['PHP_AUTH_USER'] != $correctUser) || ($_SERVER['PHP_AUTH_PW'] != $correctPasswd)) {
-        header('WWW-Authenticate: Basic realm="Vérifiez vos identifiants"');
-        header('HTTP/1.0 401 Unauthorized');
-        echo 'Texte utilisé si le visiteur utilise le bouton d\'annulation';
-        exit;
-      } else {
-        if(($_SERVER['PHP_AUTH_USER'] == $correctUser) && ($_SERVER['PHP_AUTH_PW'] == $correctPasswd)){*/
-          $res=$helloService->hello();
+          $res=$resumeService->getResume();
           $zip=new \ZipArchive();
           if($zip->open('Archive.zip', \ZipArchive::CREATE) === true)
           {
