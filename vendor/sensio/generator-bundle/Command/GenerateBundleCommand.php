@@ -91,20 +91,19 @@ EOT
         $generator->generateBundle($bundle);
 
         $errors = array();
-        $runner = $questionHelper->getRunner($output, $errors);
 
         // check that the namespace is already autoloaded
-        $runner($this->checkAutoloader($output, $bundle));
+        $this->checkAutoloader($output, $bundle);
 
         // register the bundle in the Kernel class
-        $runner($this->updateKernel($output, $this->getContainer()->get('kernel'), $bundle));
+        $this->updateKernel($output, $this->getContainer()->get('kernel'), $bundle);
 
         // routing importing
-        $runner($this->updateRouting($output, $bundle));
+        $this->updateRouting($output, $bundle);
 
         if (!$bundle->shouldGenerateDependencyInjectionDirectory()) {
             // we need to import their services.yml manually!
-            $runner($this->updateConfiguration($output, $bundle));
+            $this->updateConfiguration($output, $bundle);
         }
 
         $questionHelper->writeGeneratorSummary($output, $errors);
@@ -151,7 +150,7 @@ EOT
                 'See http://symfony.com/doc/current/cookbook/bundles/best_practices.html#bundle-name for more',
                 'details on bundle naming conventions.',
                 '',
-                'Use <comment>/</comment> instead of <comment>\\ </comment>for the namespace delimiter to avoid any problems.',
+                'Use <comment>/</comment> instead of <comment>\\ </comment> for the namespace delimiter to avoid any problem.',
                 '',
             ));
 

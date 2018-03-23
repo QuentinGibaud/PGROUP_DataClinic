@@ -30,7 +30,6 @@ class ComposerStaticInitce32f360f39707201d89a619cd8d8bbb
             'Symfony\\Polyfill\\Php70\\' => 23,
             'Symfony\\Polyfill\\Php56\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
-            'Symfony\\Polyfill\\Apcu\\' => 22,
             'Symfony\\Component\\Finder\\' => 25,
             'Symfony\\Component\\Asset\\' => 24,
             'Symfony\\Component\\' => 18,
@@ -68,7 +67,6 @@ class ComposerStaticInitce32f360f39707201d89a619cd8d8bbb
         ),
         'D' => 
         array (
-            'Doctrine\\ORM\\' => 13,
             'Doctrine\\Instantiator\\' => 22,
             'Doctrine\\Common\\Inflector\\' => 26,
             'Doctrine\\Common\\Cache\\' => 22,
@@ -107,10 +105,6 @@ class ComposerStaticInitce32f360f39707201d89a619cd8d8bbb
         'Symfony\\Polyfill\\Mbstring\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
-        ),
-        'Symfony\\Polyfill\\Apcu\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/symfony/polyfill-apcu',
         ),
         'Symfony\\Component\\Finder\\' => 
         array (
@@ -200,10 +194,6 @@ class ComposerStaticInitce32f360f39707201d89a619cd8d8bbb
         array (
             0 => __DIR__ . '/..' . '/fig/link-util/src',
         ),
-        'Doctrine\\ORM\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/doctrine/orm/lib/Doctrine/ORM',
-        ),
         'Doctrine\\Instantiator\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/instantiator/src/Doctrine/Instantiator',
@@ -259,6 +249,10 @@ class ComposerStaticInitce32f360f39707201d89a619cd8d8bbb
         ),
         'D' => 
         array (
+            'Doctrine\\ORM\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/doctrine/orm/lib',
+            ),
             'Doctrine\\DBAL\\' => 
             array (
                 0 => __DIR__ . '/..' . '/doctrine/dbal/lib',

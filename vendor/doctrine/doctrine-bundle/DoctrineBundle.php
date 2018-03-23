@@ -14,7 +14,6 @@
 
 namespace Doctrine\Bundle\DoctrineBundle;
 
-use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\ServiceRepositoryCompilerPass;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Bundle\DoctrineBundle\Command\CreateDatabaseDoctrineCommand;
 use Doctrine\Bundle\DoctrineBundle\Command\DropDatabaseDoctrineCommand;
@@ -25,6 +24,7 @@ use Doctrine\ORM\Proxy\Autoloader;
 use Symfony\Component\Console\Application;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\IntrospectableContainerInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Bridge\Doctrine\DependencyInjection\CompilerPass\DoctrineValidationPass;
 use Symfony\Bridge\Doctrine\DependencyInjection\CompilerPass\RegisterEventListenersAndSubscribersPass;
@@ -55,7 +55,6 @@ class DoctrineBundle extends Bundle
 
         $container->addCompilerPass(new DoctrineValidationPass('orm'));
         $container->addCompilerPass(new EntityListenerPass());
-        $container->addCompilerPass(new ServiceRepositoryCompilerPass());
     }
 
     /**
@@ -120,7 +119,7 @@ class DoctrineBundle extends Bundle
         // Clear all entity managers to clear references to entities for GC
         if ($this->container->hasParameter('doctrine.entity_managers')) {
             foreach ($this->container->getParameter('doctrine.entity_managers') as $id) {
-                if (!method_exists($this->container, 'initialized') || $this->container->initialized($id)) {
+                if (!$this->container instanceof IntrospectableContainerInterface || $this->container->initialized($id)) {
                     $this->container->get($id)->clear();
                 }
             }
@@ -129,7 +128,7 @@ class DoctrineBundle extends Bundle
         // Close all connections to avoid reaching too many connections in the process when booting again later (tests)
         if ($this->container->hasParameter('doctrine.connections')) {
             foreach ($this->container->getParameter('doctrine.connections') as $id) {
-                if (!method_exists($this->container, 'initialized') || $this->container->initialized($id)) {
+                if (!$this->container instanceof IntrospectableContainerInterface || $this->container->initialized($id)) {
                     $this->container->get($id)->close();
                 }
             }
@@ -141,5 +140,18 @@ class DoctrineBundle extends Bundle
      */
     public function registerCommands(Application $application)
     {
+        // Use the default logic when the ORM is available.
+        // This avoids listing all ORM commands by hand.
+        if (class_exists('Doctrine\\ORM\\Version')) {
+            parent::registerCommands($application);
+
+            return;
+        }
+
+        // Register only the DBAL commands if the ORM is not available.
+        $application->add(new CreateDatabaseDoctrineCommand());
+        $application->add(new DropDatabaseDoctrineCommand());
+        $application->add(new RunSqlDoctrineCommand());
+        $application->add(new ImportDoctrineCommand());
     }
 }

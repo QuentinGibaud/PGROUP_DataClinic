@@ -14,8 +14,6 @@
 
 namespace Doctrine\Bundle\DoctrineBundle\DependencyInjection;
 
-use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\ServiceRepositoryCompilerPass;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface;
 use Doctrine\ORM\Version;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Alias;
@@ -23,12 +21,8 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\DefinitionDecorator;
-use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\DependencyInjection\ServiceLocator;
-use Symfony\Component\Form\AbstractType;
 use Symfony\Bridge\Doctrine\DependencyInjection\AbstractDoctrineExtension;
-use Symfony\Bridge\Doctrine\Form\Type\DoctrineType;
 use Symfony\Component\Config\FileLocator;
 use Doctrine\Bundle\DoctrineCacheBundle\DependencyInjection\SymfonyBridgeAdapter;
 use Doctrine\Bundle\DoctrineCacheBundle\DependencyInjection\CacheProviderLoader;
@@ -48,6 +42,11 @@ class DoctrineExtension extends AbstractDoctrineExtension
      * @var string
      */
     private $defaultConnection;
+
+    /**
+     * @var array
+     */
+    private $entityManagers;
 
     /**
      * @var SymfonyBridgeAdapter
@@ -87,6 +86,20 @@ class DoctrineExtension extends AbstractDoctrineExtension
 
             $this->ormLoad($config['orm'], $container);
         }
+
+        if (PHP_VERSION_ID < 70000) {
+            $this->addClassesToCompile(array(
+                'Doctrine\\Common\\Annotations\\DocLexer',
+                'Doctrine\\Common\\Annotations\\FileCacheReader',
+                'Doctrine\\Common\\Annotations\\PhpParser',
+                'Doctrine\\Common\\Annotations\\Reader',
+                'Doctrine\\Common\\Lexer',
+                'Doctrine\\Common\\Persistence\\ConnectionRegistry',
+                'Doctrine\\Common\\Persistence\\Proxy',
+                'Doctrine\\Common\\Util\\ClassUtils',
+                'Doctrine\\Bundle\\DoctrineBundle\\Registry',
+            ));
+        }
     }
 
     /**
@@ -112,7 +125,6 @@ class DoctrineExtension extends AbstractDoctrineExtension
         $this->defaultConnection = $config['default_connection'];
 
         $container->setAlias('database_connection', sprintf('doctrine.dbal.%s_connection', $this->defaultConnection));
-        $container->getAlias('database_connection')->setPublic(true);
         $container->setAlias('doctrine.dbal.event_manager', new Alias(sprintf('doctrine.dbal.%s_connection.event_manager', $this->defaultConnection), false));
 
         $container->setParameter('doctrine.dbal.connection_factory.types', $config['types']);
@@ -141,9 +153,7 @@ class DoctrineExtension extends AbstractDoctrineExtension
     protected function loadDbalConnection($name, array $connection, ContainerBuilder $container)
     {
         // configuration
-        $definitionClassname = $this->getDefinitionClassname();
-
-        $configuration = $container->setDefinition(sprintf('doctrine.dbal.%s_connection.configuration', $name), new $definitionClassname('doctrine.dbal.connection.configuration'));
+        $configuration = $container->setDefinition(sprintf('doctrine.dbal.%s_connection.configuration', $name), new DefinitionDecorator('doctrine.dbal.connection.configuration'));
         $logger = null;
         if ($connection['logging']) {
             $logger = new Reference('doctrine.dbal.logger');
@@ -151,12 +161,12 @@ class DoctrineExtension extends AbstractDoctrineExtension
         unset ($connection['logging']);
         if ($connection['profiling']) {
             $profilingLoggerId = 'doctrine.dbal.logger.profiling.'.$name;
-            $container->setDefinition($profilingLoggerId, new $definitionClassname('doctrine.dbal.logger.profiling'));
+            $container->setDefinition($profilingLoggerId, new DefinitionDecorator('doctrine.dbal.logger.profiling'));
             $profilingLogger = new Reference($profilingLoggerId);
             $container->getDefinition('data_collector.doctrine')->addMethodCall('addLogger', array($name, $profilingLogger));
 
             if (null !== $logger) {
-                $chainLogger = new $definitionClassname('doctrine.dbal.logger.chain');
+                $chainLogger = new DefinitionDecorator('doctrine.dbal.logger.chain');
                 $chainLogger->addMethodCall('addLogger', array($profilingLogger));
 
                 $loggerId = 'doctrine.dbal.logger.chain.'.$name;
@@ -185,14 +195,13 @@ class DoctrineExtension extends AbstractDoctrineExtension
         }
 
         // event manager
-        $container->setDefinition(sprintf('doctrine.dbal.%s_connection.event_manager', $name), new $definitionClassname('doctrine.dbal.connection.event_manager'));
+        $container->setDefinition(sprintf('doctrine.dbal.%s_connection.event_manager', $name), new DefinitionDecorator('doctrine.dbal.connection.event_manager'));
 
         // connection
         $options = $this->getConnectionOptions($connection);
 
         $def = $container
-            ->setDefinition(sprintf('doctrine.dbal.%s_connection', $name), new $definitionClassname('doctrine.dbal.connection'))
-            ->setPublic(true)
+            ->setDefinition(sprintf('doctrine.dbal.%s_connection', $name), new DefinitionDecorator('doctrine.dbal.connection'))
             ->setArguments(array(
                 $options,
                 new Reference(sprintf('doctrine.dbal.%s_connection.configuration', $name)),
@@ -200,11 +209,6 @@ class DoctrineExtension extends AbstractDoctrineExtension
                 $connection['mapping_types'],
             ))
         ;
-
-        // Set class in case "wrapper_class" option was used to assist IDEs
-        if (isset($options['wrapperClass'])) {
-            $def->setClass($options['wrapperClass']);
-        }
 
         if (!empty($connection['use_savepoints'])) {
             $def->addMethodCall('setNestTransactionsWithSavepoints', array($connection['use_savepoints']));
@@ -324,18 +328,14 @@ class DoctrineExtension extends AbstractDoctrineExtension
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('orm.xml');
 
-        if (class_exists(AbstractType::class) && method_exists(DoctrineType::class, 'reset')) {
-            $container->getDefinition('form.type.entity')->addTag('kernel.reset', array('method' => 'reset'));
-        }
-
-        $entityManagers = array();
+        $this->entityManagers = array();
         foreach (array_keys($config['entity_managers']) as $name) {
-            $entityManagers[$name] = sprintf('doctrine.orm.%s_entity_manager', $name);
+            $this->entityManagers[$name] = sprintf('doctrine.orm.%s_entity_manager', $name);
         }
-        $container->setParameter('doctrine.entity_managers', $entityManagers);
+        $container->setParameter('doctrine.entity_managers', $this->entityManagers);
 
         if (empty($config['default_entity_manager'])) {
-            $tmp = array_keys($entityManagers);
+            $tmp = array_keys($this->entityManagers);
             $config['default_entity_manager'] = reset($tmp);
         }
         $container->setParameter('doctrine.default_entity_manager', $config['default_entity_manager']);
@@ -346,7 +346,6 @@ class DoctrineExtension extends AbstractDoctrineExtension
         }
 
         $container->setAlias('doctrine.orm.entity_manager', sprintf('doctrine.orm.%s_entity_manager', $config['default_entity_manager']));
-        $container->getAlias('doctrine.orm.entity_manager')->setPublic(true);
 
         $config['entity_managers'] = $this->fixManagersAutoMappings($config['entity_managers'], $container->getParameter('kernel.bundles'));
 
@@ -378,25 +377,6 @@ class DoctrineExtension extends AbstractDoctrineExtension
                 $def->addTag('doctrine.event_subscriber');
             }
         }
-
-        // if is for Symfony 3.2 and lower compat
-        if (method_exists($container, 'registerForAutoconfiguration')) {
-            $container->registerForAutoconfiguration(ServiceEntityRepositoryInterface::class)
-                ->addTag(ServiceRepositoryCompilerPass::REPOSITORY_SERVICE_TAG);
-        }
-
-        /*
-         * Compatibility for Symfony 3.2 and lower: gives the service a default argument.
-         * When DoctrineBundle requires 3.3 or higher, this can be moved to an anonymous
-         * service in orm.xml.
-         *
-         * This is replaced with a true locator by ServiceRepositoryCompilerPass.
-         * This makes that pass technically optional (good for tests).
-         */
-        if (class_exists(ServiceLocator::class)) {
-            $container->getDefinition('doctrine.orm.container_repository_factory')
-                ->replaceArgument(0, (new Definition(ServiceLocator::class))->setArgument(0, []));
-        }
     }
 
     /**
@@ -407,8 +387,7 @@ class DoctrineExtension extends AbstractDoctrineExtension
      */
     protected function loadOrmEntityManager(array $entityManager, ContainerBuilder $container)
     {
-        $definitionClassname = $this->getDefinitionClassname();
-        $ormConfigDef = $container->setDefinition(sprintf('doctrine.orm.%s_configuration', $entityManager['name']), new $definitionClassname('doctrine.orm.configuration'));
+        $ormConfigDef = $container->setDefinition(sprintf('doctrine.orm.%s_configuration', $entityManager['name']), new DefinitionDecorator('doctrine.orm.configuration'));
 
         $this->loadOrmEntityManagerMappingInformation($entityManager, $ormConfigDef, $container);
         $this->loadOrmCacheDrivers($entityManager, $container);
@@ -498,7 +477,7 @@ class DoctrineExtension extends AbstractDoctrineExtension
 
         $managerConfiguratorName = sprintf('doctrine.orm.%s_manager_configurator', $entityManager['name']);
         $container
-            ->setDefinition($managerConfiguratorName, new $definitionClassname('doctrine.orm.manager_configurator.abstract'))
+            ->setDefinition($managerConfiguratorName, new DefinitionDecorator('doctrine.orm.manager_configurator.abstract'))
             ->replaceArgument(0, $enabledFilters)
             ->replaceArgument(1, $filtersParameters)
         ;
@@ -508,8 +487,7 @@ class DoctrineExtension extends AbstractDoctrineExtension
         }
 
         $container
-            ->setDefinition(sprintf('doctrine.orm.%s_entity_manager', $entityManager['name']), new $definitionClassname('doctrine.orm.entity_manager.abstract'))
-            ->setPublic(true)
+            ->setDefinition(sprintf('doctrine.orm.%s_entity_manager', $entityManager['name']), new DefinitionDecorator('doctrine.orm.entity_manager.abstract'))
             ->setArguments(array(
                 new Reference(sprintf('doctrine.dbal.%s_connection', $entityManager['connection'])),
                 new Reference(sprintf('doctrine.orm.%s_configuration', $entityManager['name'])),
@@ -825,13 +803,5 @@ class DoctrineExtension extends AbstractDoctrineExtension
     public function getConfiguration(array $config, ContainerBuilder $container)
     {
         return new Configuration($container->getParameter('kernel.debug'));
-    }
-
-    /**
-     * @return string
-     */
-    private function getDefinitionClassname()
-    {
-        return class_exists(ChildDefinition::class) ? ChildDefinition::class : DefinitionDecorator::class;
     }
 }
