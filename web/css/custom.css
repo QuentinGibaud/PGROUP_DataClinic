@@ -112,6 +112,12 @@ iframe {
     height: 15px; /* .push must be the same height as .footer */
     padding: 5px 0px;
     background-color: #FFFFFF;
+    display: flex;
+}
+
+#pull-right{
+    flex:1;
+    text-align: right;
 }
 
 @media (min-width: 768px) {
