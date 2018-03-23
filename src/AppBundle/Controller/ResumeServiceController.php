@@ -49,6 +49,7 @@ class ResumeServiceController extends Controller
           {
             foreach ($res as $row) {
               // Ajout direct.
+              //penser à ajouter la condition 
               $zip->addFromString($row['titre_projet'].'_'.$row['nom_inv'].'.txt', $row['resume_projet']);
             }
             // Et on referme l'archive.
