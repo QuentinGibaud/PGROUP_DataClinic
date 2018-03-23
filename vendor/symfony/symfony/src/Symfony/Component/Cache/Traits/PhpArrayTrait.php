@@ -22,9 +22,11 @@ use Symfony\Component\Cache\Exception\InvalidArgumentException;
  */
 trait PhpArrayTrait
 {
+    use ProxyTrait;
+
     private $file;
     private $values;
-    private $fallbackPool;
+    private $zendDetectUnicode;
 
     /**
      * Store an array of cached values.
@@ -106,7 +108,7 @@ EOF;
 
         @rename($tmpFile, $this->file);
 
-        $this->values = (include $this->file) ?: array();
+        $this->initialize();
     }
 
     /**
@@ -118,7 +120,7 @@ EOF;
 
         $cleared = @unlink($this->file) || !file_exists($this->file);
 
-        return $this->fallbackPool->clear() && $cleared;
+        return $this->pool->clear() && $cleared;
     }
 
     /**
@@ -126,6 +128,15 @@ EOF;
      */
     private function initialize()
     {
-        $this->values = file_exists($this->file) ? (include $this->file ?: array()) : array();
+        if ($this->zendDetectUnicode) {
+            $zmb = ini_set('zend.detect_unicode', 0);
+        }
+        try {
+            $this->values = file_exists($this->file) ? (include $this->file ?: array()) : array();
+        } finally {
+            if ($this->zendDetectUnicode) {
+                ini_set('zend.detect_unicode', $zmb);
+            }
+        }
     }
 }

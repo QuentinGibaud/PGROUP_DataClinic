@@ -31,6 +31,8 @@ class ServerRunCommand extends ServerCommand
     private $documentRoot;
     private $environment;
 
+    protected static $defaultName = 'server:run';
+
     public function __construct($documentRoot = null, $environment = null)
     {
         $this->documentRoot = $documentRoot;
@@ -50,7 +52,6 @@ class ServerRunCommand extends ServerCommand
                 new InputOption('docroot', 'd', InputOption::VALUE_REQUIRED, 'Document root, usually where your front controllers are stored'),
                 new InputOption('router', 'r', InputOption::VALUE_REQUIRED, 'Path to custom router script'),
             ))
-            ->setName('server:run')
             ->setDescription('Runs a local web server')
             ->setHelp(<<<'EOF'
 <info>%command.name%</info> runs a local web server: By default, the server
@@ -88,6 +89,12 @@ EOF
     {
         $io = new SymfonyStyle($input, $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output);
 
+        // deprecated, logic to be removed in 4.0
+        // this allows the commands to work out of the box with web/ and public/
+        if ($this->documentRoot && !is_dir($this->documentRoot) && is_dir(dirname($this->documentRoot).'/web')) {
+            $this->documentRoot = dirname($this->documentRoot).'/web';
+        }
+
         if (null === $documentRoot = $input->getOption('docroot')) {
             if (!$this->documentRoot) {
                 $io->error('The document root directory must be either passed as first argument of the constructor or through the "--docroot" input option.');
@@ -95,12 +102,6 @@ EOF
                 return 1;
             }
             $documentRoot = $this->documentRoot;
-        }
-
-        if (!is_dir($documentRoot)) {
-            $io->error(sprintf('The document root directory "%s" does not exist.', $documentRoot));
-
-            return 1;
         }
 
         if (!$env = $this->environment) {

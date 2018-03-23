@@ -32,17 +32,31 @@ class WebServerConfig
             throw new \InvalidArgumentException(sprintf('Unable to find the front controller under "%s" (none of these files exist: %s).', $documentRoot, implode(', ', $this->getFrontControllerFileNames($env))));
         }
 
-        putenv('APP_FRONT_CONTROLLER='.$file);
+        $_ENV['APP_FRONT_CONTROLLER'] = $file;
 
         $this->documentRoot = $documentRoot;
         $this->env = $env;
-        $this->router = $router ?: __DIR__.'/Resources/router.php';
+
+        if (null !== $router) {
+            $absoluteRouterPath = realpath($router);
+
+            if (false === $absoluteRouterPath) {
+                throw new \InvalidArgumentException(sprintf('Router script "%s" does not exist.', $router));
+            }
+
+            $this->router = $absoluteRouterPath;
+        } else {
+            $this->router = __DIR__.'/Resources/router.php';
+        }
 
         if (null === $address) {
             $this->hostname = '127.0.0.1';
             $this->port = $this->findBestPort();
         } elseif (false !== $pos = strrpos($address, ':')) {
             $this->hostname = substr($address, 0, $pos);
+            if ('*' === $this->hostname) {
+                $this->hostname = '0.0.0.0';
+            }
             $this->port = substr($address, $pos + 1);
         } elseif (ctype_digit($address)) {
             $this->hostname = '127.0.0.1';

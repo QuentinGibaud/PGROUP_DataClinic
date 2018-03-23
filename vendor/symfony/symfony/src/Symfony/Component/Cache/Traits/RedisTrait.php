@@ -12,9 +12,11 @@
 namespace Symfony\Component\Cache\Traits;
 
 use Predis\Connection\Factory;
+use Predis\Connection\Aggregate\ClusterInterface;
 use Predis\Connection\Aggregate\PredisCluster;
 use Predis\Connection\Aggregate\RedisCluster;
 use Predis\Response\Status;
+use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 
 /**
@@ -32,6 +34,7 @@ trait RedisTrait
         'timeout' => 30,
         'read_timeout' => 0,
         'retry_interval' => 0,
+        'lazy' => false,
     );
     private $redis;
 
@@ -45,7 +48,9 @@ trait RedisTrait
         if (preg_match('#[^-+_.A-Za-z0-9]#', $namespace, $match)) {
             throw new InvalidArgumentException(sprintf('RedisAdapter namespace contains "%s" but only characters in [-+_.A-Za-z0-9] are allowed.', $match[0]));
         }
-        if (!$redisClient instanceof \Redis && !$redisClient instanceof \RedisArray && !$redisClient instanceof \RedisCluster && !$redisClient instanceof \Predis\Client) {
+        if ($redisClient instanceof \RedisCluster) {
+            $this->enableVersioning();
+        } elseif (!$redisClient instanceof \Redis && !$redisClient instanceof \RedisArray && !$redisClient instanceof \Predis\Client && !$redisClient instanceof RedisProxy) {
             throw new InvalidArgumentException(sprintf('%s() expects parameter 1 to be Redis, RedisArray, RedisCluster or Predis\Client, %s given', __METHOD__, is_object($redisClient) ? get_class($redisClient) : gettype($redisClient)));
         }
         $this->redis = $redisClient;
@@ -64,7 +69,7 @@ trait RedisTrait
      * @param string $dsn
      * @param array  $options See self::$defaultConnectionOptions
      *
-     * @throws InvalidArgumentException When the DSN is invalid.
+     * @throws InvalidArgumentException when the DSN is invalid
      *
      * @return \Redis|\Predis\Client According to the "class" option
      */
@@ -105,24 +110,38 @@ trait RedisTrait
             $params += $query;
         }
         $params += $options + self::$defaultConnectionOptions;
+        if (null === $params['class'] && !extension_loaded('redis') && !class_exists(\Predis\Client::class)) {
+            throw new CacheException(sprintf('Cannot find the "redis" extension, and "predis/predis" is not installed: %s', $dsn));
+        }
         $class = null === $params['class'] ? (extension_loaded('redis') ? \Redis::class : \Predis\Client::class) : $params['class'];
 
         if (is_a($class, \Redis::class, true)) {
             $connect = $params['persistent'] || $params['persistent_id'] ? 'pconnect' : 'connect';
             $redis = new $class();
-            @$redis->{$connect}($params['host'], $params['port'], $params['timeout'], $params['persistent_id'], $params['retry_interval']);
 
-            if (@!$redis->isConnected()) {
-                $e = ($e = error_get_last()) && preg_match('/^Redis::p?connect\(\): (.*)/', $e['message'], $e) ? sprintf(' (%s)', $e[1]) : '';
-                throw new InvalidArgumentException(sprintf('Redis connection failed%s: %s', $e, $dsn));
-            }
+            $initializer = function ($redis) use ($connect, $params, $dsn, $auth) {
+                @$redis->{$connect}($params['host'], $params['port'], $params['timeout'], $params['persistent_id'], $params['retry_interval']);
 
-            if ((null !== $auth && !$redis->auth($auth))
-                || ($params['dbindex'] && !$redis->select($params['dbindex']))
-                || ($params['read_timeout'] && !$redis->setOption(\Redis::OPT_READ_TIMEOUT, $params['read_timeout']))
-            ) {
-                $e = preg_replace('/^ERR /', '', $redis->getLastError());
-                throw new InvalidArgumentException(sprintf('Redis connection failed (%s): %s', $e, $dsn));
+                if (@!$redis->isConnected()) {
+                    $e = ($e = error_get_last()) && preg_match('/^Redis::p?connect\(\): (.*)/', $e['message'], $e) ? sprintf(' (%s)', $e[1]) : '';
+                    throw new InvalidArgumentException(sprintf('Redis connection failed%s: %s', $e, $dsn));
+                }
+
+                if ((null !== $auth && !$redis->auth($auth))
+                    || ($params['dbindex'] && !$redis->select($params['dbindex']))
+                    || ($params['read_timeout'] && !$redis->setOption(\Redis::OPT_READ_TIMEOUT, $params['read_timeout']))
+                ) {
+                    $e = preg_replace('/^ERR /', '', $redis->getLastError());
+                    throw new InvalidArgumentException(sprintf('Redis connection failed (%s): %s', $e, $dsn));
+                }
+
+                return true;
+            };
+
+            if ($params['lazy']) {
+                $redis = new RedisProxy($redis, $initializer);
+            } else {
+                $initializer($redis);
             }
         } elseif (is_a($class, \Predis\Client::class, true)) {
             $params['scheme'] = $scheme;
@@ -170,8 +189,8 @@ trait RedisTrait
      */
     protected function doClear($namespace)
     {
-        // When using a native Redis cluster, clearing the cache cannot work and always returns false.
-        // Clearing the cache should then be done by any other means (e.g. by restarting the cluster).
+        // When using a native Redis cluster, clearing the cache is done by versioning in AbstractTrait::clear().
+        // This means old keys are not really removed until they expire and may need gargage collection.
 
         $cleared = true;
         $hosts = array($this->redis);
@@ -284,7 +303,7 @@ trait RedisTrait
     {
         $ids = array();
 
-        if ($this->redis instanceof \Predis\Client) {
+        if ($this->redis instanceof \Predis\Client && !$this->redis->getConnection() instanceof ClusterInterface) {
             $results = $this->redis->pipeline(function ($redis) use ($generator, &$ids) {
                 foreach ($generator() as $command => $args) {
                     call_user_func_array(array($redis, $command), $args);
@@ -308,9 +327,10 @@ trait RedisTrait
             foreach ($results as $k => list($h, $c)) {
                 $results[$k] = $connections[$h][$c];
             }
-        } elseif ($this->redis instanceof \RedisCluster) {
-            // phpredis doesn't support pipelining with RedisCluster
+        } elseif ($this->redis instanceof \RedisCluster || ($this->redis instanceof \Predis\Client && $this->redis->getConnection() instanceof ClusterInterface)) {
+            // phpredis & predis don't support pipelining with RedisCluster
             // see https://github.com/phpredis/phpredis/blob/develop/cluster.markdown#pipelining
+            // see https://github.com/nrk/predis/issues/267#issuecomment-123781423
             $results = array();
             foreach ($generator() as $command => $args) {
                 $results[] = call_user_func_array(array($this->redis, $command), $args);

@@ -19,6 +19,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * Runs a local web server in a background process.
@@ -29,6 +30,8 @@ class ServerStartCommand extends ServerCommand
 {
     private $documentRoot;
     private $environment;
+
+    protected static $defaultName = 'server:start';
 
     public function __construct($documentRoot = null, $environment = null)
     {
@@ -44,7 +47,6 @@ class ServerStartCommand extends ServerCommand
     protected function configure()
     {
         $this
-            ->setName('server:start')
             ->setDefinition(array(
                 new InputArgument('addressport', InputArgument::OPTIONAL, 'The address to listen to (can be address:port, address, or port)'),
                 new InputOption('docroot', 'd', InputOption::VALUE_REQUIRED, 'Document root'),
@@ -93,11 +95,17 @@ EOF
                 'You can either install it or use the "server:run" command instead.',
             ));
 
-            if ($io->ask('Do you want to execute <info>server:run</info> immediately? [yN] ', false)) {
+            if ($io->confirm('Do you want to execute <info>server:run</info> immediately?', false)) {
                 return $this->getApplication()->find('server:run')->run($input, $output);
             }
 
             return 1;
+        }
+
+        // deprecated, logic to be removed in 4.0
+        // this allows the commands to work out of the box with web/ and public/
+        if ($this->documentRoot && !is_dir($this->documentRoot) && is_dir(dirname($this->documentRoot).'/web')) {
+            $this->documentRoot = dirname($this->documentRoot).'/web';
         }
 
         if (null === $documentRoot = $input->getOption('docroot')) {
@@ -107,12 +115,6 @@ EOF
                 return 1;
             }
             $documentRoot = $this->documentRoot;
-        }
-
-        if (!is_dir($documentRoot)) {
-            $io->error(sprintf('The document root directory "%s" does not exist.', $documentRoot));
-
-            return 1;
         }
 
         if (!$env = $this->environment) {
@@ -130,6 +132,10 @@ EOF
         if ('prod' === $env) {
             $io->error('Running this server in production environment is NOT recommended!');
         }
+
+        // replace event dispatcher with an empty one to prevent console.terminate from firing
+        // as container could have changed between start and stop
+        $this->getApplication()->setDispatcher(new EventDispatcher());
 
         try {
             $server = new WebServer();

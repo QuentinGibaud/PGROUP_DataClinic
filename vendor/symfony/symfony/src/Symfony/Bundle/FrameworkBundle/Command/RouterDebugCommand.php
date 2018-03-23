@@ -12,6 +12,7 @@
 namespace Symfony\Bundle\FrameworkBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Console\Helper\DescriptorHelper;
+use Symfony\Bundle\FrameworkBundle\Controller\ControllerNameParser;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -26,14 +27,42 @@ use Symfony\Component\Routing\Route;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Tobias Schultze <http://tobion.de>
+ *
+ * @final since version 3.4
  */
 class RouterDebugCommand extends ContainerAwareCommand
 {
+    protected static $defaultName = 'debug:router';
+    private $router;
+
+    /**
+     * @param RouterInterface $router
+     */
+    public function __construct($router = null)
+    {
+        if (!$router instanceof RouterInterface) {
+            @trigger_error(sprintf('%s() expects an instance of "%s" as first argument since Symfony 3.4. Not passing it is deprecated and will throw a TypeError in 4.0.', __METHOD__, RouterInterface::class), E_USER_DEPRECATED);
+
+            parent::__construct($router);
+
+            return;
+        }
+
+        parent::__construct();
+
+        $this->router = $router;
+    }
+
     /**
      * {@inheritdoc}
+     *
+     * BC to be removed in 4.0
      */
     public function isEnabled()
     {
+        if (null !== $this->router) {
+            return parent::isEnabled();
+        }
         if (!$this->getContainer()->has('router')) {
             return false;
         }
@@ -51,7 +80,6 @@ class RouterDebugCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('debug:router')
             ->setDefinition(array(
                 new InputArgument('name', InputArgument::OPTIONAL, 'A route name'),
                 new InputOption('show-controllers', null, InputOption::VALUE_NONE, 'Show assigned controllers in overview'),
@@ -76,10 +104,15 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // BC to be removed in 4.0
+        if (null === $this->router) {
+            $this->router = $this->getContainer()->get('router');
+        }
+
         $io = new SymfonyStyle($input, $output);
         $name = $input->getArgument('name');
         $helper = new DescriptorHelper();
-        $routes = $this->getContainer()->get('router')->getRouteCollection();
+        $routes = $this->router->getRouteCollection();
 
         if ($name) {
             if (!$route = $routes->get($name)) {
@@ -112,7 +145,7 @@ EOF
     private function convertController(Route $route)
     {
         if ($route->hasDefault('_controller')) {
-            $nameParser = $this->getContainer()->get('controller_name_converter');
+            $nameParser = new ControllerNameParser($this->getApplication()->getKernel());
             try {
                 $route->setDefault('_controller', $nameParser->build($route->getDefault('_controller')));
             } catch (\InvalidArgumentException $e) {
@@ -131,12 +164,12 @@ EOF
         if (1 === substr_count($controller, ':')) {
             list($service, $method) = explode(':', $controller);
             try {
-                return sprintf('%s::%s', get_class($this->getContainer()->get($service)), $method);
+                return sprintf('%s::%s', get_class($this->getApplication()->getKernel()->getContainer()->get($service)), $method);
             } catch (ServiceNotFoundException $e) {
             }
         }
 
-        $nameParser = $this->getContainer()->get('controller_name_converter');
+        $nameParser = new ControllerNameParser($this->getApplication()->getKernel());
         try {
             $shortNotation = $nameParser->build($controller);
             $route->setDefault('_controller', $shortNotation);
