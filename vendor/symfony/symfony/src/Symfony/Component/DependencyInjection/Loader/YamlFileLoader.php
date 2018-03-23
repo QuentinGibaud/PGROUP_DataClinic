@@ -13,11 +13,8 @@ namespace Symfony\Component\DependencyInjection\Loader;
 
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
-use Symfony\Component\DependencyInjection\Argument\BoundArgument;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
-use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -59,12 +56,10 @@ class YamlFileLoader extends FileLoader
         'autowire' => 'autowire',
         'autowiring_types' => 'autowiring_types',
         'autoconfigure' => 'autoconfigure',
-        'bind' => 'bind',
     );
 
     private static $prototypeKeywords = array(
         'resource' => 'resource',
-        'namespace' => 'namespace',
         'exclude' => 'exclude',
         'parent' => 'parent',
         'shared' => 'shared',
@@ -80,7 +75,6 @@ class YamlFileLoader extends FileLoader
         'tags' => 'tags',
         'autowire' => 'autowire',
         'autoconfigure' => 'autoconfigure',
-        'bind' => 'bind',
     );
 
     private static $instanceofKeywords = array(
@@ -99,13 +93,11 @@ class YamlFileLoader extends FileLoader
         'tags' => 'tags',
         'autowire' => 'autowire',
         'autoconfigure' => 'autoconfigure',
-        'bind' => 'bind',
     );
 
     private $yamlParser;
 
     private $anonymousServicesCount;
-    private $anonymousServicesSuffix;
 
     /**
      * {@inheritdoc}
@@ -129,11 +121,11 @@ class YamlFileLoader extends FileLoader
         // parameters
         if (isset($content['parameters'])) {
             if (!is_array($content['parameters'])) {
-                throw new InvalidArgumentException(sprintf('The "parameters" key should contain an array in %s. Check your YAML syntax.', $path));
+                throw new InvalidArgumentException(sprintf('The "parameters" key should contain an array in %s. Check your YAML syntax.', $resource));
             }
 
             foreach ($content['parameters'] as $key => $value) {
-                $this->container->setParameter($key, $this->resolveServices($value, $path, true));
+                $this->container->setParameter($key, $this->resolveServices($value, $resource, true));
             }
         }
 
@@ -142,10 +134,9 @@ class YamlFileLoader extends FileLoader
 
         // services
         $this->anonymousServicesCount = 0;
-        $this->anonymousServicesSuffix = ContainerBuilder::hash($path);
         $this->setCurrentDir(dirname($path));
         try {
-            $this->parseDefinitions($content, $path);
+            $this->parseDefinitions($content, $resource);
         } finally {
             $this->instanceof = array();
         }
@@ -186,10 +177,7 @@ class YamlFileLoader extends FileLoader
         $defaultDirectory = dirname($file);
         foreach ($content['imports'] as $import) {
             if (!is_array($import)) {
-                $import = array('resource' => $import);
-            }
-            if (!isset($import['resource'])) {
-                throw new InvalidArgumentException(sprintf('An import should provide a resource in %s. Check your YAML syntax.', $file));
+                throw new InvalidArgumentException(sprintf('The values in the "imports" key should be arrays in %s. Check your YAML syntax.', $file));
             }
 
             $this->setCurrentDir($defaultDirectory);
@@ -265,41 +253,33 @@ class YamlFileLoader extends FileLoader
                 throw new InvalidArgumentException(sprintf('The configuration key "%s" cannot be used to define a default value in "%s". Allowed keys are "%s".', $key, $file, implode('", "', self::$defaultsKeywords)));
             }
         }
-
-        if (isset($defaults['tags'])) {
-            if (!is_array($tags = $defaults['tags'])) {
-                throw new InvalidArgumentException(sprintf('Parameter "tags" in "_defaults" must be an array in %s. Check your YAML syntax.', $file));
-            }
-
-            foreach ($tags as $tag) {
-                if (!is_array($tag)) {
-                    $tag = array('name' => $tag);
-                }
-
-                if (!isset($tag['name'])) {
-                    throw new InvalidArgumentException(sprintf('A "tags" entry in "_defaults" is missing a "name" key in %s.', $file));
-                }
-                $name = $tag['name'];
-                unset($tag['name']);
-
-                if (!is_string($name) || '' === $name) {
-                    throw new InvalidArgumentException(sprintf('The tag name in "_defaults" must be a non-empty string in %s.', $file));
-                }
-
-                foreach ($tag as $attribute => $value) {
-                    if (!is_scalar($value) && null !== $value) {
-                        throw new InvalidArgumentException(sprintf('Tag "%s", attribute "%s" in "_defaults" must be of a scalar-type in %s. Check your YAML syntax.', $name, $attribute, $file));
-                    }
-                }
-            }
+        if (!isset($defaults['tags'])) {
+            return $defaults;
+        }
+        if (!is_array($tags = $defaults['tags'])) {
+            throw new InvalidArgumentException(sprintf('Parameter "tags" in "_defaults" must be an array in %s. Check your YAML syntax.', $file));
         }
 
-        if (isset($defaults['bind'])) {
-            if (!is_array($defaults['bind'])) {
-                throw new InvalidArgumentException(sprintf('Parameter "bind" in "_defaults" must be an array in %s. Check your YAML syntax.', $file));
+        foreach ($tags as $tag) {
+            if (!is_array($tag)) {
+                $tag = array('name' => $tag);
             }
 
-            $defaults['bind'] = array_map(function ($v) { return new BoundArgument($v); }, $this->resolveServices($defaults['bind'], $file));
+            if (!isset($tag['name'])) {
+                throw new InvalidArgumentException(sprintf('A "tags" entry in "_defaults" is missing a "name" key in %s.', $file));
+            }
+            $name = $tag['name'];
+            unset($tag['name']);
+
+            if (!is_string($name) || '' === $name) {
+                throw new InvalidArgumentException(sprintf('The tag name in "_defaults" must be a non-empty string in %s.', $file));
+            }
+
+            foreach ($tag as $attribute => $value) {
+                if (!is_scalar($value) && null !== $value) {
+                    throw new InvalidArgumentException(sprintf('Tag "%s", attribute "%s" in "_defaults" must be of a scalar-type in %s. Check your YAML syntax.', $name, $attribute, $file));
+                }
+            }
         }
 
         return $defaults;
@@ -337,10 +317,8 @@ class YamlFileLoader extends FileLoader
             @trigger_error(sprintf('Service names that start with an underscore are deprecated since Symfony 3.3 and will be reserved in 4.0. Rename the "%s" service or define it in XML instead.', $id), E_USER_DEPRECATED);
         }
         if (is_string($service) && 0 === strpos($service, '@')) {
-            $this->container->setAlias($id, $alias = new Alias(substr($service, 1)));
-            if (isset($defaults['public'])) {
-                $alias->setPublic($defaults['public']);
-            }
+            $public = isset($defaults['public']) ? $defaults['public'] : true;
+            $this->container->setAlias($id, new Alias(substr($service, 1), $public));
 
             return;
         }
@@ -360,12 +338,8 @@ class YamlFileLoader extends FileLoader
         $this->checkDefinition($id, $service, $file);
 
         if (isset($service['alias'])) {
-            $this->container->setAlias($id, $alias = new Alias($service['alias']));
-            if (array_key_exists('public', $service)) {
-                $alias->setPublic($service['public']);
-            } elseif (isset($defaults['public'])) {
-                $alias->setPublic($defaults['public']);
-            }
+            $public = array_key_exists('public', $service) ? (bool) $service['public'] : (isset($defaults['public']) ? $defaults['public'] : true);
+            $this->container->setAlias($id, new Alias($service['alias'], $public));
 
             foreach ($service as $key => $value) {
                 if (!in_array($key, array('alias', 'public'))) {
@@ -388,9 +362,6 @@ class YamlFileLoader extends FileLoader
                     // since tags are never inherited from parents, there is no confusion
                     // thus we can safely add them as defaults to ChildDefinition
                     continue;
-                }
-                if ('bind' === $k) {
-                    throw new InvalidArgumentException(sprintf('Attribute "bind" on service "%s" cannot be inherited from "_defaults" when a "parent" is set. Move your child definitions to a separate file.', $id));
                 }
                 if (!isset($service[$k])) {
                     throw new InvalidArgumentException(sprintf('Attribute "%s" on service "%s" cannot be inherited from "_defaults" when a "parent" is set. Move your child definitions to a separate file or define this attribute explicitly.', $k, $id));
@@ -476,9 +447,6 @@ class YamlFileLoader extends FileLoader
                     $args = isset($call[1]) ? $this->resolveServices($call[1], $file) : array();
                 }
 
-                if (!is_array($args)) {
-                    throw new InvalidArgumentException(sprintf('The second parameter for function call "%s" must be an array of its arguments for service "%s" in %s. Check your YAML syntax.', $method, $id, $file));
-                }
                 $definition->addMethodCall($method, $args);
             }
         }
@@ -548,21 +516,6 @@ class YamlFileLoader extends FileLoader
             }
         }
 
-        if (isset($defaults['bind']) || isset($service['bind'])) {
-            // deep clone, to avoid multiple process of the same instance in the passes
-            $bindings = isset($defaults['bind']) ? unserialize(serialize($defaults['bind'])) : array();
-
-            if (isset($service['bind'])) {
-                if (!is_array($service['bind'])) {
-                    throw new InvalidArgumentException(sprintf('Parameter "bind" must be an array for service "%s" in %s. Check your YAML syntax.', $id, $file));
-                }
-
-                $bindings = array_merge($bindings, $this->resolveServices($service['bind'], $file));
-            }
-
-            $definition->setBindings($bindings);
-        }
-
         if (isset($service['autoconfigure'])) {
             if (!$definition instanceof ChildDefinition) {
                 $definition->setAutoconfigured($service['autoconfigure']);
@@ -571,17 +524,12 @@ class YamlFileLoader extends FileLoader
             }
         }
 
-        if (array_key_exists('namespace', $service) && !array_key_exists('resource', $service)) {
-            throw new InvalidArgumentException(sprintf('A "resource" attribute must be set when the "namespace" attribute is set for service "%s" in %s. Check your YAML syntax.', $id, $file));
-        }
-
         if (array_key_exists('resource', $service)) {
             if (!is_string($service['resource'])) {
                 throw new InvalidArgumentException(sprintf('A "resource" attribute must be of type string for service "%s" in %s. Check your YAML syntax.', $id, $file));
             }
             $exclude = isset($service['exclude']) ? $service['exclude'] : null;
-            $namespace = isset($service['namespace']) ? $service['namespace'] : $id;
-            $this->registerClasses($definition, $namespace, $service['resource'], $exclude);
+            $this->registerClasses($definition, $id, $service['resource'], $exclude);
         } else {
             $this->setDefinition($id, $definition);
         }
@@ -657,18 +605,10 @@ class YamlFileLoader extends FileLoader
             $this->yamlParser = new YamlParser();
         }
 
-        $prevErrorHandler = set_error_handler(function ($level, $message, $script, $line) use ($file, &$prevErrorHandler) {
-            $message = E_USER_DEPRECATED === $level ? preg_replace('/ on line \d+/', ' in "'.$file.'"$0', $message) : $message;
-
-            return $prevErrorHandler ? $prevErrorHandler($level, $message, $script, $line) : false;
-        });
-
         try {
-            $configuration = $this->yamlParser->parseFile($file, Yaml::PARSE_CONSTANT | Yaml::PARSE_CUSTOM_TAGS);
+            $configuration = $this->yamlParser->parse(file_get_contents($file), Yaml::PARSE_CONSTANT | Yaml::PARSE_CUSTOM_TAGS | Yaml::PARSE_KEYS_AS_STRINGS);
         } catch (ParseException $e) {
             throw new InvalidArgumentException(sprintf('The file "%s" does not contain valid YAML.', $file), 0, $e);
-        } finally {
-            restore_error_handler();
         }
 
         return $this->validate($configuration, $file);
@@ -738,13 +678,6 @@ class YamlFileLoader extends FileLoader
                     throw new InvalidArgumentException(sprintf('"!iterator" tag only accepts arrays of "@service" references in "%s".', $file));
                 }
             }
-            if ('tagged' === $value->getTag()) {
-                if (!is_string($argument) || !$argument) {
-                    throw new InvalidArgumentException(sprintf('"!tagged" tag only accepts non empty string in "%s".', $file));
-                }
-
-                return new TaggedIteratorArgument($argument);
-            }
             if ('service' === $value->getTag()) {
                 if ($isParameter) {
                     throw new InvalidArgumentException(sprintf('Using an anonymous service in a parameter is not allowed in "%s".', $file));
@@ -755,7 +688,7 @@ class YamlFileLoader extends FileLoader
                 $instanceof = $this->instanceof;
                 $this->instanceof = array();
 
-                $id = sprintf('%d_%s', ++$this->anonymousServicesCount, preg_replace('/^.*\\\\/', '', isset($argument['class']) ? $argument['class'] : '').$this->anonymousServicesSuffix);
+                $id = sprintf('%d_%s', ++$this->anonymousServicesCount, hash('sha256', $file));
                 $this->parseDefinition($id, $argument, $file, array());
 
                 if (!$this->container->hasDefinition($id)) {
@@ -778,18 +711,11 @@ class YamlFileLoader extends FileLoader
                 $value[$k] = $this->resolveServices($v, $file, $isParameter);
             }
         } elseif (is_string($value) && 0 === strpos($value, '@=')) {
-            if (!class_exists(Expression::class)) {
-                throw new \LogicException(sprintf('The "@=" expression syntax cannot be used without the ExpressionLanguage component. Try running "composer require symfony/expression-language".'));
-            }
-
             return new Expression(substr($value, 2));
         } elseif (is_string($value) && 0 === strpos($value, '@')) {
             if (0 === strpos($value, '@@')) {
                 $value = substr($value, 1);
                 $invalidBehavior = null;
-            } elseif (0 === strpos($value, '@!')) {
-                $value = substr($value, 2);
-                $invalidBehavior = ContainerInterface::IGNORE_ON_UNINITIALIZED_REFERENCE;
             } elseif (0 === strpos($value, '@?')) {
                 $value = substr($value, 2);
                 $invalidBehavior = ContainerInterface::IGNORE_ON_INVALID_REFERENCE;
@@ -799,7 +725,7 @@ class YamlFileLoader extends FileLoader
             }
 
             if ('=' === substr($value, -1)) {
-                @trigger_error(sprintf('The "=" suffix that used to disable strict references in Symfony 2.x is deprecated since Symfony 3.3 and will be unsupported in 4.0. Remove it in "%s".', $value), E_USER_DEPRECATED);
+                @trigger_error(sprintf('The "=" suffix that used to disable strict references in Symfony 2.x is deprecated since 3.3 and will be unsupported in 4.0. Remove it in "%s".', $value), E_USER_DEPRECATED);
                 $value = substr($value, 0, -1);
             }
 
@@ -813,6 +739,8 @@ class YamlFileLoader extends FileLoader
 
     /**
      * Loads from Extensions.
+     *
+     * @param array $content
      */
     private function loadFromExtensions(array $content)
     {
@@ -821,7 +749,7 @@ class YamlFileLoader extends FileLoader
                 continue;
             }
 
-            if (!is_array($values) && null !== $values) {
+            if (!is_array($values)) {
                 $values = array();
             }
 
@@ -840,7 +768,7 @@ class YamlFileLoader extends FileLoader
     {
         if ($throw = $this->isLoadingInstanceof) {
             $keywords = self::$instanceofKeywords;
-        } elseif ($throw = (isset($definition['resource']) || isset($definition['namespace']))) {
+        } elseif ($throw = isset($definition['resource'])) {
             $keywords = self::$prototypeKeywords;
         } else {
             $keywords = self::$serviceKeywords;

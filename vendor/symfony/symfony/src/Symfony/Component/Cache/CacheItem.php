@@ -135,6 +135,8 @@ final class CacheItem implements CacheItemInterface
      * Returns the list of tags bound to the value coming from the pool storage if any.
      *
      * @return array
+     *
+     * @experimental in version 3.3
      */
     public function getPreviousTags()
     {
@@ -145,8 +147,6 @@ final class CacheItem implements CacheItemInterface
      * Validates a cache key according to PSR-6.
      *
      * @param string $key The key to validate
-     *
-     * @return string
      *
      * @throws InvalidArgumentException When $key is not valid
      */
@@ -161,8 +161,6 @@ final class CacheItem implements CacheItemInterface
         if (false !== strpbrk($key, '{}()/\@:')) {
             throw new InvalidArgumentException(sprintf('Cache key "%s" contains reserved characters {}()/\@:', $key));
         }
-
-        return $key;
     }
 
     /**

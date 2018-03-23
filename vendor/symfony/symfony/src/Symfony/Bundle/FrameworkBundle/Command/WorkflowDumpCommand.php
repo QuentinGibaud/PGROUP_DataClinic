@@ -20,12 +20,13 @@ use Symfony\Component\Workflow\Marking;
 
 /**
  * @author Grégoire Pineau <lyrixx@lyrixx.info>
- *
- * @final since version 3.4
  */
 class WorkflowDumpCommand extends ContainerAwareCommand
 {
-    protected static $defaultName = 'workflow:dump';
+    public function isEnabled()
+    {
+        return $this->getContainer()->has('workflow.registry');
+    }
 
     /**
      * {@inheritdoc}
@@ -33,6 +34,7 @@ class WorkflowDumpCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
+            ->setName('workflow:dump')
             ->setDefinition(array(
                 new InputArgument('name', InputArgument::REQUIRED, 'A workflow name'),
                 new InputArgument('marking', InputArgument::IS_ARRAY, 'A marking (a list of places)'),
@@ -54,7 +56,7 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $container = $this->getApplication()->getKernel()->getContainer();
+        $container = $this->getContainer();
         $serviceId = $input->getArgument('name');
         if ($container->has('workflow.'.$serviceId)) {
             $workflow = $container->get('workflow.'.$serviceId);

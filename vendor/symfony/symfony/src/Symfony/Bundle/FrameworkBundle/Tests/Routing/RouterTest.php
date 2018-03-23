@@ -220,17 +220,16 @@ class RouterTest extends TestCase
 
     public function testGetRouteCollectionAddsContainerParametersResource()
     {
-        $routeCollection = new RouteCollection();
-        $routeCollection->add('foo', new Route('/%locale%'));
+        $routeCollection = $this->getMockBuilder(RouteCollection::class)->getMock();
+        $routeCollection->method('getIterator')->willReturn(new \ArrayIterator(array(new Route('/%locale%'))));
+        $routeCollection->expects($this->once())->method('addResource')->with(new ContainerParametersResource(array('locale' => 'en')));
 
         $sc = $this->getServiceContainer($routeCollection);
         $sc->setParameter('locale', 'en');
 
         $router = new Router($sc, 'foo');
 
-        $routeCollection = $router->getRouteCollection();
-
-        $this->assertEquals(array(new ContainerParametersResource(array('locale' => 'en'))), $routeCollection->getResources());
+        $router->getRouteCollection();
     }
 
     public function getNonStringValues()
@@ -239,6 +238,8 @@ class RouterTest extends TestCase
     }
 
     /**
+     * @param RouteCollection $routes
+     *
      * @return \Symfony\Component\DependencyInjection\Container
      */
     private function getServiceContainer(RouteCollection $routes)

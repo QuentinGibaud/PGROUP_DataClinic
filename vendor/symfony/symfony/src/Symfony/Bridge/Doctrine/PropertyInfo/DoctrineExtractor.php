@@ -27,6 +27,9 @@ use Symfony\Component\PropertyInfo\Type;
  */
 class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeExtractorInterface
 {
+    /**
+     * @var ClassMetadataFactory
+     */
     private $classMetadataFactory;
 
     public function __construct(ClassMetadataFactory $classMetadataFactory)
@@ -47,17 +50,7 @@ class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeE
             return;
         }
 
-        $properties = array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
-
-        if ($metadata instanceof ClassMetadataInfo && class_exists('Doctrine\ORM\Mapping\Embedded') && $metadata->embeddedClasses) {
-            $properties = array_filter($properties, function ($property) {
-                return false === strpos($property, '.');
-            });
-
-            $properties = array_merge($properties, array_keys($metadata->embeddedClasses));
-        }
-
-        return $properties;
+        return array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
     }
 
     /**
@@ -112,10 +105,6 @@ class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeE
             ));
         }
 
-        if ($metadata instanceof ClassMetadataInfo && class_exists('Doctrine\ORM\Mapping\Embedded') && isset($metadata->embeddedClasses[$property])) {
-            return array(new Type(Type::BUILTIN_TYPE_OBJECT, false, $metadata->embeddedClasses[$property]['class']));
-        }
-
         if ($metadata->hasField($property)) {
             $typeOfField = $metadata->getTypeOfField($property);
             $nullable = $metadata instanceof ClassMetadataInfo && $metadata->isNullable($property);
@@ -127,15 +116,6 @@ class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeE
                 case 'vardatetime':
                 case DBALType::TIME:
                     return array(new Type(Type::BUILTIN_TYPE_OBJECT, $nullable, 'DateTime'));
-
-                case 'date_immutable':
-                case 'datetime_immutable':
-                case 'datetimetz_immutable':
-                case 'time_immutable':
-                    return array(new Type(Type::BUILTIN_TYPE_OBJECT, $nullable, 'DateTimeImmutable'));
-
-                case 'dateinterval':
-                    return array(new Type(Type::BUILTIN_TYPE_OBJECT, $nullable, 'DateInterval'));
 
                 case DBALType::TARRAY:
                     return array(new Type(Type::BUILTIN_TYPE_ARRAY, $nullable, null, true));

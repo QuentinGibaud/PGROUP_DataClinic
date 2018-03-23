@@ -13,15 +13,12 @@ $container->loadFromExtension('framework', array(
     'esi' => array(
         'enabled' => true,
     ),
-    'ssi' => array(
-        'enabled' => true,
-    ),
     'profiler' => array(
         'only_exceptions' => true,
         'enabled' => false,
     ),
     'router' => array(
-        'resource' => '%kernel.project_dir%/config/routing.xml',
+        'resource' => '%kernel.root_dir%/config/routing.xml',
         'type' => 'xml',
     ),
     'session' => array(
@@ -54,7 +51,7 @@ $container->loadFromExtension('framework', array(
     'translator' => array(
         'enabled' => true,
         'fallback' => 'fr',
-        'paths' => array('%kernel.project_dir%/Fixtures/translations'),
+        'paths' => array('%kernel.root_dir%/Fixtures/translations'),
     ),
     'validation' => array(
         'enabled' => true,
@@ -68,7 +65,6 @@ $container->loadFromExtension('framework', array(
         'enabled' => true,
         'enable_annotations' => true,
         'name_converter' => 'serializer.name_converter.camel_case_to_snake_case',
-        'circular_reference_handler' => 'my.circular.reference.handler',
     ),
     'property_info' => true,
     'ide' => 'file%%link%%format',

@@ -22,16 +22,26 @@ class NativeSessionTokenStorage implements TokenStorageInterface
 {
     /**
      * The namespace used to store values in the session.
+     *
+     * @var string
      */
     const SESSION_NAMESPACE = '_csrf';
 
+    /**
+     * @var bool
+     */
     private $sessionStarted = false;
+
+    /**
+     * @var string
+     */
     private $namespace;
 
     /**
      * Initializes the storage with a session namespace.
      *
-     * @param string $namespace The namespace under which the token is stored in the session
+     * @param string $namespace The namespace under which the token is stored
+     *                          in the session
      */
     public function __construct($namespace = self::SESSION_NAMESPACE)
     {
@@ -87,17 +97,11 @@ class NativeSessionTokenStorage implements TokenStorageInterface
             $this->startSession();
         }
 
-        if (!isset($_SESSION[$this->namespace][$tokenId])) {
-            return;
-        }
-
-        $token = (string) $_SESSION[$this->namespace][$tokenId];
+        $token = isset($_SESSION[$this->namespace][$tokenId])
+            ? (string) $_SESSION[$this->namespace][$tokenId]
+            : null;
 
         unset($_SESSION[$this->namespace][$tokenId]);
-
-        if (!$_SESSION[$this->namespace]) {
-            unset($_SESSION[$this->namespace]);
-        }
 
         return $token;
     }

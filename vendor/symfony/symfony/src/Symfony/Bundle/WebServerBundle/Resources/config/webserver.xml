@@ -8,27 +8,23 @@
         <defaults public="false" />
 
         <service id="web_server.command.server_run" class="Symfony\Bundle\WebServerBundle\Command\ServerRunCommand">
-            <argument>%kernel.project_dir%/public</argument>
+            <argument>%kernel.project_dir%/web</argument>
             <argument>%kernel.environment%</argument>
-            <tag name="console.command" command="server:run" />
+            <tag name="console.command" />
         </service>
 
         <service id="web_server.command.server_start" class="Symfony\Bundle\WebServerBundle\Command\ServerStartCommand">
-            <argument>%kernel.project_dir%/public</argument>
+            <argument>%kernel.project_dir%/web</argument>
             <argument>%kernel.environment%</argument>
-            <tag name="console.command" command="server:start" />
+            <tag name="console.command" />
         </service>
 
         <service id="web_server.command.server_stop" class="Symfony\Bundle\WebServerBundle\Command\ServerStopCommand">
-            <tag name="console.command" command="server:stop" />
+            <tag name="console.command" />
         </service>
 
         <service id="web_server.command.server_status" class="Symfony\Bundle\WebServerBundle\Command\ServerStatusCommand">
-            <tag name="console.command" command="server:status" />
-        </service>
-
-        <service id="web_server.command.server_log" class="Symfony\Bundle\WebServerBundle\Command\ServerLogCommand">
-            <tag name="console.command" command="server:log" />
+            <tag name="console.command" />
         </service>
     </services>
 </container>

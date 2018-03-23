@@ -27,7 +27,7 @@ class FactoryReturnTypePass implements CompilerPassInterface
     public function __construct(ResolveClassPass $resolveClassPass = null)
     {
         if (null === $resolveClassPass) {
-            @trigger_error('The '.__CLASS__.' class is deprecated since Symfony 3.3 and will be removed in 4.0.', E_USER_DEPRECATED);
+            @trigger_error('The '.__CLASS__.' class is deprecated since version 3.3 and will be removed in 4.0.', E_USER_DEPRECATED);
         }
         $this->resolveClassPass = $resolveClassPass;
     }
@@ -51,12 +51,13 @@ class FactoryReturnTypePass implements CompilerPassInterface
     private function updateDefinition(ContainerBuilder $container, $id, Definition $definition, array $resolveClassPassChanges, array $previous = array())
     {
         // circular reference
-        if (isset($previous[$id])) {
+        $lcId = strtolower($id);
+        if (isset($previous[$lcId])) {
             return;
         }
 
         $factory = $definition->getFactory();
-        if (null === $factory || (!isset($resolveClassPassChanges[$id]) && null !== $definition->getClass())) {
+        if (null === $factory || (!isset($resolveClassPassChanges[$lcId]) && null !== $definition->getClass())) {
             return;
         }
 
@@ -72,16 +73,15 @@ class FactoryReturnTypePass implements CompilerPassInterface
             }
         } else {
             if ($factory[0] instanceof Reference) {
-                $previous[$id] = true;
-                $factoryId = $container->normalizeId($factory[0]);
-                $factoryDefinition = $container->findDefinition($factoryId);
-                $this->updateDefinition($container, $factoryId, $factoryDefinition, $resolveClassPassChanges, $previous);
+                $previous[$lcId] = true;
+                $factoryDefinition = $container->findDefinition((string) $factory[0]);
+                $this->updateDefinition($container, $factory[0], $factoryDefinition, $resolveClassPassChanges, $previous);
                 $class = $factoryDefinition->getClass();
             } else {
                 $class = $factory[0];
             }
 
-            if (!$m = $container->getReflectionClass($class, false)) {
+            if (!$m = $container->getReflectionClass($class)) {
                 return;
             }
             try {
@@ -103,7 +103,7 @@ class FactoryReturnTypePass implements CompilerPassInterface
                 }
             }
 
-            if (null !== $returnType && (!isset($resolveClassPassChanges[$id]) || $returnType !== $resolveClassPassChanges[$id])) {
+            if (null !== $returnType && (!isset($resolveClassPassChanges[$lcId]) || $returnType !== $resolveClassPassChanges[$lcId])) {
                 @trigger_error(sprintf('Relying on its factory\'s return-type to define the class of service "%s" is deprecated since Symfony 3.3 and won\'t work in 4.0. Set the "class" attribute to "%s" on the service definition instead.', $id, $returnType), E_USER_DEPRECATED);
             }
             $definition->setClass($returnType);

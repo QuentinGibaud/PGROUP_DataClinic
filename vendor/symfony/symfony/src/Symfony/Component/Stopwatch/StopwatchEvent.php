@@ -34,27 +34,22 @@ class StopwatchEvent
     private $category;
 
     /**
-     * @var bool
-     */
-    private $morePrecision;
-
-    /**
      * @var float[]
      */
     private $started = array();
 
     /**
-     * @param float       $origin        The origin time in milliseconds
-     * @param string|null $category      The event category or null to use the default
-     * @param bool        $morePrecision If true, time is stored as float to keep the original microsecond precision
+     * Constructor.
+     *
+     * @param float       $origin   The origin time in milliseconds
+     * @param string|null $category The event category or null to use the default
      *
      * @throws \InvalidArgumentException When the raw time is not valid
      */
-    public function __construct($origin, $category = null, $morePrecision = false)
+    public function __construct($origin, $category = null)
     {
         $this->origin = $this->formatTime($origin);
         $this->category = is_string($category) ? $category : 'default';
-        $this->morePrecision = $morePrecision;
     }
 
     /**
@@ -102,7 +97,7 @@ class StopwatchEvent
             throw new \LogicException('stop() called but start() has not been called before.');
         }
 
-        $this->periods[] = new StopwatchPeriod(array_pop($this->started), $this->getNow(), $this->morePrecision);
+        $this->periods[] = new StopwatchPeriod(array_pop($this->started), $this->getNow());
 
         return $this;
     }
@@ -150,7 +145,7 @@ class StopwatchEvent
     /**
      * Gets the relative time of the start of the first period.
      *
-     * @return int|float The time (in milliseconds)
+     * @return int The time (in milliseconds)
      */
     public function getStartTime()
     {
@@ -160,7 +155,7 @@ class StopwatchEvent
     /**
      * Gets the relative time of the end of the last period.
      *
-     * @return int|float The time (in milliseconds)
+     * @return int The time (in milliseconds)
      */
     public function getEndTime()
     {
@@ -172,7 +167,7 @@ class StopwatchEvent
     /**
      * Gets the duration of the events (including all periods).
      *
-     * @return int|float The duration (in milliseconds)
+     * @return int The duration (in milliseconds)
      */
     public function getDuration()
     {
@@ -182,7 +177,7 @@ class StopwatchEvent
 
         for ($i = 0; $i < $left; ++$i) {
             $index = $stopped + $i;
-            $periods[] = new StopwatchPeriod($this->started[$index], $this->getNow(), $this->morePrecision);
+            $periods[] = new StopwatchPeriod($this->started[$index], $this->getNow());
         }
 
         $total = 0;

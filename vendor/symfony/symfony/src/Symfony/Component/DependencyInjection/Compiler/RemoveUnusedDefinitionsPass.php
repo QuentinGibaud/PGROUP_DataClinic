@@ -32,6 +32,8 @@ class RemoveUnusedDefinitionsPass implements RepeatablePassInterface
 
     /**
      * Processes the ContainerBuilder to remove unused definitions.
+     *
+     * @param ContainerBuilder $container
      */
     public function process(ContainerBuilder $container)
     {
@@ -39,7 +41,7 @@ class RemoveUnusedDefinitionsPass implements RepeatablePassInterface
 
         $hasChanged = false;
         foreach ($container->getDefinitions() as $id => $definition) {
-            if ($definition->isPublic() || $definition->isPrivate()) {
+            if ($definition->isPublic()) {
                 continue;
             }
 
@@ -48,9 +50,6 @@ class RemoveUnusedDefinitionsPass implements RepeatablePassInterface
                 $referencingAliases = array();
                 $sourceIds = array();
                 foreach ($edges as $edge) {
-                    if ($edge->isWeak()) {
-                        continue;
-                    }
                     $node = $edge->getSourceNode();
                     $sourceIds[] = $node->getId();
 
@@ -66,8 +65,7 @@ class RemoveUnusedDefinitionsPass implements RepeatablePassInterface
 
             if (1 === count($referencingAliases) && false === $isReferenced) {
                 $container->setDefinition((string) reset($referencingAliases), $definition);
-                $definition->setPublic(!$definition->isPrivate());
-                $definition->setPrivate(reset($referencingAliases)->isPrivate());
+                $definition->setPublic(true);
                 $container->removeDefinition($id);
                 $container->log($this, sprintf('Removed service "%s"; reason: replaces alias %s.', $id, reset($referencingAliases)));
             } elseif (0 === count($referencingAliases) && false === $isReferenced) {

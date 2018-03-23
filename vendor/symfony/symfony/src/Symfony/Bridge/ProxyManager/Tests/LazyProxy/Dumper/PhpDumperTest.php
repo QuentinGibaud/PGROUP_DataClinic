@@ -12,6 +12,7 @@
 namespace Symfony\Bridge\ProxyManager\Tests\LazyProxy\Dumper;
 
 use PHPUnit\Framework\TestCase;
+use ProxyManager\ProxyGenerator\LazyLoading\MethodGenerator\StaticProxyConstructor;
 use Symfony\Bridge\ProxyManager\LazyProxy\PhpDumper\ProxyDumper;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
@@ -26,9 +27,21 @@ class PhpDumperTest extends TestCase
 {
     public function testDumpContainerWithProxyService()
     {
+        $container = new ContainerBuilder();
+
+        $container->register('foo', 'stdClass');
+        $container->getDefinition('foo')->setLazy(true);
+        $container->compile();
+
+        $dumper = new PhpDumper($container);
+
+        $dumper->setProxyDumper(new ProxyDumper());
+
+        $dumpedString = $dumper->dump();
+
         $this->assertStringMatchesFormatFile(
             __DIR__.'/../Fixtures/php/lazy_service_structure.txt',
-            $this->dumpLazyServiceProjectServiceContainer(),
+            $dumpedString,
             '->dump() does generate proxy lazy loading logic.'
         );
     }
@@ -38,15 +51,17 @@ class PhpDumperTest extends TestCase
      */
     public function testDumpContainerWithProxyServiceWillShareProxies()
     {
-        if (!class_exists('LazyServiceProjectServiceContainer', false)) {
-            eval('?>'.$this->dumpLazyServiceProjectServiceContainer());
+        if (class_exists(StaticProxyConstructor::class)) { // detecting ProxyManager v2
+            require_once __DIR__.'/../Fixtures/php/lazy_service_with_hints.php';
+        } else {
+            require_once __DIR__.'/../Fixtures/php/lazy_service.php';
         }
 
         $container = new \LazyServiceProjectServiceContainer();
 
+        /* @var $proxy \stdClass_c1d194250ee2e2b7d2eab8b8212368a8 */
         $proxy = $container->get('foo');
-        $this->assertInstanceOf('stdClass', $proxy);
-        $this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $proxy);
+        $this->assertInstanceOf('stdClass_c1d194250ee2e2b7d2eab8b8212368a8', $proxy);
         $this->assertSame($proxy, $container->get('foo'));
 
         $this->assertFalse($proxy->isProxyInitialized());
@@ -55,20 +70,5 @@ class PhpDumperTest extends TestCase
 
         $this->assertTrue($proxy->isProxyInitialized());
         $this->assertSame($proxy, $container->get('foo'));
-    }
-
-    private function dumpLazyServiceProjectServiceContainer()
-    {
-        $container = new ContainerBuilder();
-
-        $container->register('foo', 'stdClass')->setPublic(true);
-        $container->getDefinition('foo')->setLazy(true);
-        $container->compile();
-
-        $dumper = new PhpDumper($container);
-
-        $dumper->setProxyDumper(new ProxyDumper());
-
-        return $dumper->dump(array('class' => 'LazyServiceProjectServiceContainer'));
     }
 }

@@ -69,14 +69,6 @@ trait ArrayTrait
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function reset()
-    {
-        $this->clear();
-    }
-
     private function generateItems(array $keys, $now, $f)
     {
         foreach ($keys as $i => $key) {

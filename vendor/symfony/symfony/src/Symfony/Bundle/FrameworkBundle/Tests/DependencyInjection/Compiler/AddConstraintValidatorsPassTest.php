@@ -66,10 +66,18 @@ class AddConstraintValidatorsPassTest extends TestCase
 
     public function testThatCompilerPassIsIgnoredIfThereIsNoConstraintValidatorFactoryDefinition()
     {
-        $addConstraintValidatorsPass = new AddConstraintValidatorsPass();
-        $addConstraintValidatorsPass->process(new ContainerBuilder());
+        $definition = $this->getMockBuilder('Symfony\Component\DependencyInjection\Definition')->getMock();
+        $container = $this->getMockBuilder('Symfony\Component\DependencyInjection\ContainerBuilder')->setMethods(array('hasDefinition', 'findTaggedServiceIds', 'getDefinition'))->getMock();
 
-        // we just check that the pass does not fail if no constraint validator factory is registered
-        $this->addToAssertionCount(1);
+        $container->expects($this->never())->method('findTaggedServiceIds');
+        $container->expects($this->never())->method('getDefinition');
+        $container->expects($this->atLeastOnce())
+            ->method('hasDefinition')
+            ->with('validator.validator_factory')
+            ->will($this->returnValue(false));
+        $definition->expects($this->never())->method('replaceArgument');
+
+        $addConstraintValidatorsPass = new AddConstraintValidatorsPass();
+        $addConstraintValidatorsPass->process($container);
     }
 }

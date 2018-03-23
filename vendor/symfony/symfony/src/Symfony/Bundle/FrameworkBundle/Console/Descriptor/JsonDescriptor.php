@@ -113,11 +113,11 @@ class JsonDescriptor extends Descriptor
             $service = $this->resolveServiceDefinition($builder, $serviceId);
 
             if ($service instanceof Alias) {
-                if ($showPrivate || ($service->isPublic() && !$service->isPrivate())) {
+                if ($showPrivate || $service->isPublic()) {
                     $data['aliases'][$serviceId] = $this->getContainerAliasData($service);
                 }
             } elseif ($service instanceof Definition) {
-                if (($showPrivate || ($service->isPublic() && !$service->isPrivate()))) {
+                if (($showPrivate || $service->isPublic())) {
                     $data['definitions'][$serviceId] = $this->getContainerDefinitionData($service, $omitTags, $showArguments);
                 }
             } else {
@@ -180,6 +180,9 @@ class JsonDescriptor extends Descriptor
     /**
      * Writes data as json.
      *
+     * @param array $data
+     * @param array $options
+     *
      * @return array|string
      */
     private function writeData(array $data, array $options)
@@ -189,6 +192,8 @@ class JsonDescriptor extends Descriptor
     }
 
     /**
+     * @param Route $route
+     *
      * @return array
      */
     protected function getRouteData(Route $route)
@@ -217,7 +222,7 @@ class JsonDescriptor extends Descriptor
     {
         $data = array(
             'class' => (string) $definition->getClass(),
-            'public' => $definition->isPublic() && !$definition->isPrivate(),
+            'public' => $definition->isPublic(),
             'synthetic' => $definition->isSynthetic(),
             'lazy' => $definition->isLazy(),
             'shared' => $definition->isShared(),
@@ -226,11 +231,8 @@ class JsonDescriptor extends Descriptor
             'autoconfigure' => $definition->isAutoconfigured(),
         );
 
-        // forward compatibility with DependencyInjection component in version 4.0
-        if (method_exists($definition, 'getAutowiringTypes')) {
-            foreach ($definition->getAutowiringTypes(false) as $autowiringType) {
-                $data['autowiring_types'][] = $autowiringType;
-            }
+        foreach ($definition->getAutowiringTypes(false) as $autowiringType) {
+            $data['autowiring_types'][] = $autowiringType;
         }
 
         if ($showArguments) {
@@ -275,13 +277,15 @@ class JsonDescriptor extends Descriptor
     }
 
     /**
+     * @param Alias $alias
+     *
      * @return array
      */
     private function getContainerAliasData(Alias $alias)
     {
         return array(
             'service' => (string) $alias,
-            'public' => $alias->isPublic() && !$alias->isPrivate(),
+            'public' => $alias->isPublic(),
         );
     }
 

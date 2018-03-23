@@ -16,14 +16,15 @@ use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 use Symfony\Component\Security\Core\Encoder\PasswordEncoderInterface;
 use Symfony\Component\Security\Core\Validator\Constraints\UserPassword;
 use Symfony\Component\Security\Core\Validator\Constraints\UserPasswordValidator;
-use Symfony\Component\Validator\Test\ConstraintValidatorTestCase;
+use Symfony\Component\Validator\Tests\Constraints\AbstractConstraintValidatorTest;
 
 /**
  * @author Bernhard Schussek <bschussek@gmail.com>
  */
-abstract class UserPasswordValidatorTest extends ConstraintValidatorTestCase
+abstract class UserPasswordValidatorTest extends AbstractConstraintValidatorTest
 {
     const PASSWORD = 's3Cr3t';
+
     const SALT = '^S4lt$';
 
     /**
@@ -87,29 +88,6 @@ abstract class UserPasswordValidatorTest extends ConstraintValidatorTestCase
 
         $this->buildViolation('myMessage')
             ->assertRaised();
-    }
-
-    /**
-     * @dataProvider emptyPasswordData
-     */
-    public function testEmptyPasswordsAreNotValid($password)
-    {
-        $constraint = new UserPassword(array(
-            'message' => 'myMessage',
-        ));
-
-        $this->validator->validate($password, $constraint);
-
-        $this->buildViolation('myMessage')
-            ->assertRaised();
-    }
-
-    public function emptyPasswordData()
-    {
-        return array(
-            array(null),
-            array(''),
-        );
     }
 
     /**

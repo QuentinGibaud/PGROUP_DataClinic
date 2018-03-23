@@ -25,19 +25,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * @author Kevin Bond <kevinbond@gmail.com>
  * @author Wouter J <waldio.webdesign@gmail.com>
  * @author Grégoire Pineau <lyrixx@lyrixx.info>
- *
- * @final since version 3.4
  */
 class ConfigDumpReferenceCommand extends AbstractConfigCommand
 {
-    protected static $defaultName = 'config:dump-reference';
-
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
         $this
+            ->setName('config:dump-reference')
             ->setDefinition(array(
                 new InputArgument('name', InputArgument::OPTIONAL, 'The Bundle name or the extension alias'),
                 new InputArgument('path', InputArgument::OPTIONAL, 'The configuration option path'),
@@ -97,7 +94,7 @@ EOF
         $format = $input->getOption('format');
         $path = $input->getArgument('path');
 
-        if (null !== $path && 'yaml' !== $format) {
+        if ($path !== null && 'yaml' !== $format) {
             $errorIo->error('The "path" option is only available for the "yaml" format.');
 
             return 1;
@@ -109,7 +106,7 @@ EOF
             $message = sprintf('Default configuration for "%s"', $name);
         }
 
-        if (null !== $path) {
+        if ($path !== null) {
             $message .= sprintf(' at path "%s"', $path);
         }
 

@@ -116,26 +116,6 @@ class TwigExtensionTest extends TestCase
         $this->assertEquals('name', $options['autoescape']);
     }
 
-    /**
-     * @dataProvider getFormats
-     */
-    public function testLoadCustomDateFormats($fileFormat)
-    {
-        $container = $this->createContainer();
-        $container->registerExtension(new TwigExtension());
-        $this->loadFromFile($container, 'formats', $fileFormat);
-        $this->compileContainer($container);
-
-        $environmentConfigurator = $container->getDefinition('twig.configurator.environment');
-
-        $this->assertSame('Y-m-d', $environmentConfigurator->getArgument(0));
-        $this->assertSame('%d', $environmentConfigurator->getArgument(1));
-        $this->assertSame('Europe/Berlin', $environmentConfigurator->getArgument(2));
-        $this->assertSame(2, $environmentConfigurator->getArgument(3));
-        $this->assertSame(',', $environmentConfigurator->getArgument(4));
-        $this->assertSame('.', $environmentConfigurator->getArgument(5));
-    }
-
     public function testGlobalsWithDifferentTypesAndValues()
     {
         $globals = array(
@@ -156,10 +136,9 @@ class TwigExtensionTest extends TestCase
 
         $calls = $container->getDefinition('twig')->getMethodCalls();
         foreach (array_slice($calls, 2) as $call) {
-            $this->assertEquals(key($globals), $call[1][0]);
-            $this->assertSame(current($globals), $call[1][1]);
-
-            next($globals);
+            list($name, $value) = each($globals);
+            $this->assertEquals($name, $call[1][0]);
+            $this->assertSame($value, $call[1][1]);
         }
     }
 
@@ -196,9 +175,7 @@ class TwigExtensionTest extends TestCase
             array(__DIR__.'/Fixtures/Bundle/ChildChildTwigBundle/Resources/views', 'Twig'),
             array(__DIR__.'/Fixtures/Bundle/ChildTwigBundle/Resources/views', 'Twig'),
             array(__DIR__.'/Fixtures/Resources/TwigBundle/views', 'Twig'),
-            array(__DIR__.'/Fixtures/templates/bundles/TwigBundle', 'Twig'),
             array(realpath(__DIR__.'/../..').'/Resources/views', 'Twig'),
-            array(realpath(__DIR__.'/../..').'/Resources/views', '!Twig'),
             array(__DIR__.'/Fixtures/Bundle/ChildChildChildChildTwigBundle/Resources/views', 'ChildTwig'),
             array(__DIR__.'/Fixtures/Bundle/ChildChildChildTwigBundle/Resources/views', 'ChildTwig'),
             array(__DIR__.'/Fixtures/Bundle/ChildChildTwigBundle/Resources/views', 'ChildTwig'),
@@ -207,7 +184,6 @@ class TwigExtensionTest extends TestCase
             array(__DIR__.'/Fixtures/Bundle/ChildChildChildTwigBundle/Resources/views', 'ChildChildTwig'),
             array(__DIR__.'/Fixtures/Bundle/ChildChildTwigBundle/Resources/views', 'ChildChildTwig'),
             array(__DIR__.'/Fixtures/Resources/views'),
-            array(__DIR__.'/Fixtures/templates'),
         ), $paths);
     }
 
@@ -232,10 +208,9 @@ class TwigExtensionTest extends TestCase
         }
         $container->registerExtension(new TwigExtension());
         $container->loadFromExtension('twig', array());
-        $container->setAlias('test.twig.extension.debug.stopwatch', 'twig.extension.debug.stopwatch')->setPublic(true);
         $this->compileContainer($container);
 
-        $tokenParsers = $container->get('test.twig.extension.debug.stopwatch')->getTokenParsers();
+        $tokenParsers = $container->get('twig.extension.debug.stopwatch')->getTokenParsers();
         $stopwatchIsAvailable = new \ReflectionProperty($tokenParsers[0], 'stopwatchIsAvailable');
         $stopwatchIsAvailable->setAccessible(true);
 
@@ -270,9 +245,9 @@ class TwigExtensionTest extends TestCase
 
         $loader = $container->getDefinition('twig.runtime_loader');
         $args = $container->getDefinition((string) $loader->getArgument(0))->getArgument(0);
-        $this->assertArrayHasKey('Symfony\Component\Form\FormRenderer', $args);
+        $this->assertArrayHasKey('Symfony\Bridge\Twig\Form\TwigRenderer', $args);
         $this->assertArrayHasKey('FooClass', $args);
-        $this->assertEquals('twig.form.renderer', $args['Symfony\Component\Form\FormRenderer']->getValues()[0]);
+        $this->assertEquals('twig.form.renderer', $args['Symfony\Bridge\Twig\Form\TwigRenderer']->getValues()[0]);
         $this->assertEquals('foo', $args['FooClass']->getValues()[0]);
     }
 

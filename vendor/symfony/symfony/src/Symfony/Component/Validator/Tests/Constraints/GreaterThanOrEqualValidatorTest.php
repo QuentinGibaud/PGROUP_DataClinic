@@ -24,7 +24,7 @@ class GreaterThanOrEqualValidatorTest extends AbstractComparisonValidatorTestCas
         return new GreaterThanOrEqualValidator();
     }
 
-    protected function createConstraint(array $options = null)
+    protected function createConstraint(array $options)
     {
         return new GreaterThanOrEqual($options);
     }
@@ -51,17 +51,6 @@ class GreaterThanOrEqualValidatorTest extends AbstractComparisonValidatorTestCas
             array('a', 'a'),
             array('z', 'a'),
             array(null, 1),
-        );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function provideValidComparisonsToPropertyPath()
-    {
-        return array(
-            array(5),
-            array(6),
         );
     }
 

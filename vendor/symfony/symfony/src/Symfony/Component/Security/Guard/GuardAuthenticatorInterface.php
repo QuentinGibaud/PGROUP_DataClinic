@@ -28,8 +28,6 @@ use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface
  * one location.
  *
  * @author Ryan Weaver <ryan@knpuniversity.com>
- *
- * @deprecated since version 3.4, to be removed in 4.0. Use AuthenticatorInterface instead
  */
 interface GuardAuthenticatorInterface extends AuthenticationEntryPointInterface
 {
@@ -155,7 +153,6 @@ interface GuardAuthenticatorInterface extends AuthenticationEntryPointInterface
      *      done by having a _remember_me checkbox in your form, but
      *      can be configured by the "always_remember_me" and "remember_me_parameter"
      *      parameters under the "remember_me" firewall key
-     *  D) The onAuthenticationSuccess method returns a Response object
      *
      * @return bool
      */

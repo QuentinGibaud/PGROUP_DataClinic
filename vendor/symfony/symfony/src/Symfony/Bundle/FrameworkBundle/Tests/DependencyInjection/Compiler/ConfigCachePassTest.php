@@ -44,16 +44,13 @@ class ConfigCachePassTest extends TestCase
 
     public function testThatCheckersCanBeMissing()
     {
-        $container = new ContainerBuilder();
+        $container = $this->getMockBuilder('Symfony\Component\DependencyInjection\ContainerBuilder')->setMethods(array('findTaggedServiceIds'))->getMock();
 
-        $definitionsBefore = count($container->getDefinitions());
-        $aliasesBefore = count($container->getAliases());
+        $container->expects($this->atLeastOnce())
+            ->method('findTaggedServiceIds')
+            ->will($this->returnValue(array()));
 
         $pass = new ConfigCachePass();
         $pass->process($container);
-
-        // the container is untouched (i.e. no new definitions or aliases)
-        $this->assertCount($definitionsBefore, $container->getDefinitions());
-        $this->assertCount($aliasesBefore, $container->getAliases());
     }
 }

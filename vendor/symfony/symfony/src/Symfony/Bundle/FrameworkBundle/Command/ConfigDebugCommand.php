@@ -23,19 +23,16 @@ use Symfony\Component\Yaml\Yaml;
  * A console command for dumping available configuration reference.
  *
  * @author Grégoire Pineau <lyrixx@lyrixx.info>
- *
- * @final since version 3.4
  */
 class ConfigDebugCommand extends AbstractConfigCommand
 {
-    protected static $defaultName = 'debug:config';
-
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
         $this
+            ->setName('debug:config')
             ->setDefinition(array(
                 new InputArgument('name', InputArgument::OPTIONAL, 'The bundle name or the extension alias'),
                 new InputArgument('path', InputArgument::OPTIONAL, 'The configuration option path'),
@@ -114,7 +111,7 @@ EOF
 
     private function compileContainer()
     {
-        $kernel = clone $this->getApplication()->getKernel();
+        $kernel = clone $this->getContainer()->get('kernel');
         $kernel->boot();
 
         $method = new \ReflectionMethod($kernel, 'buildContainer');

@@ -54,17 +54,20 @@ final class ServiceLocatorTagPass extends AbstractRecursivePass
 
         $value->setArguments($arguments);
 
-        $id = 'service_locator.'.ContainerBuilder::hash($value);
+        if ($public = $value->isPublic()) {
+            $value->setPublic(false);
+        }
+        $id = 'service_locator.'.md5(serialize($value));
 
         if ($isRoot) {
             if ($id !== $this->currentId) {
-                $this->container->setAlias($id, new Alias($this->currentId, false));
+                $this->container->setAlias($id, new Alias($this->currentId, $public));
             }
 
             return $value;
         }
 
-        $this->container->setDefinition($id, $value->setPublic(false));
+        $this->container->setDefinition($id, $value);
 
         return new Reference($id);
     }
@@ -72,16 +75,12 @@ final class ServiceLocatorTagPass extends AbstractRecursivePass
     /**
      * @param ContainerBuilder $container
      * @param Reference[]      $refMap
-     * @param string|null      $callerId
      *
      * @return Reference
      */
-    public static function register(ContainerBuilder $container, array $refMap, $callerId = null)
+    public static function register(ContainerBuilder $container, array $refMap)
     {
         foreach ($refMap as $id => $ref) {
-            if (!$ref instanceof Reference) {
-                throw new InvalidArgumentException(sprintf('Invalid service locator definition: only services can be referenced, "%s" found for key "%s". Inject parameter values using constructors instead.', is_object($ref) ? get_class($ref) : gettype($ref), $id));
-            }
             $refMap[$id] = new ServiceClosureArgument($ref);
         }
         ksort($refMap);
@@ -91,20 +90,8 @@ final class ServiceLocatorTagPass extends AbstractRecursivePass
             ->setPublic(false)
             ->addTag('container.service_locator');
 
-        if (!$container->has($id = 'service_locator.'.ContainerBuilder::hash($locator))) {
+        if (!$container->has($id = 'service_locator.'.md5(serialize($locator)))) {
             $container->setDefinition($id, $locator);
-        }
-
-        if (null !== $callerId) {
-            $locatorId = $id;
-            // Locators are shared when they hold the exact same list of factories;
-            // to have them specialized per consumer service, we use a cloning factory
-            // to derivate customized instances from the prototype one.
-            $container->register($id .= '.'.$callerId, ServiceLocator::class)
-                ->setPublic(false)
-                ->setFactory(array(new Reference($locatorId), 'withContext'))
-                ->addArgument($callerId)
-                ->addArgument(new Reference('service_container'));
         }
 
         return new Reference($id);

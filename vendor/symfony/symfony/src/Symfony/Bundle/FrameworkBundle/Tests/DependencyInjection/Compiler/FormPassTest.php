@@ -41,7 +41,6 @@ class FormPassTest extends TestCase
         $container->addCompilerPass(new FormPass());
 
         $extDefinition = new Definition('Symfony\Component\Form\Extension\DependencyInjection\DependencyInjectionExtension');
-        $extDefinition->setPublic(true);
         $extDefinition->setArguments(array(
             new Reference('service_container'),
             array(),
@@ -50,8 +49,8 @@ class FormPassTest extends TestCase
         ));
 
         $container->setDefinition('form.extension', $extDefinition);
-        $container->register('my.type1', __CLASS__.'_Type1')->addTag('form.type')->setPublic(true);
-        $container->register('my.type2', __CLASS__.'_Type2')->addTag('form.type')->setPublic(true);
+        $container->register('my.type1', __CLASS__.'_Type1')->addTag('form.type');
+        $container->register('my.type2', __CLASS__.'_Type2')->addTag('form.type');
 
         $container->compile();
 
@@ -77,7 +76,6 @@ class FormPassTest extends TestCase
             array(),
             array(),
         ));
-        $extDefinition->setPublic(true);
 
         $container->setDefinition('form.extension', $extDefinition);
 
@@ -140,7 +138,6 @@ class FormPassTest extends TestCase
             array(),
             array(),
         ));
-        $extDefinition->setPublic(true);
 
         $container->setDefinition('form.extension', $extDefinition);
         $container->register('my.type_extension', 'stdClass')
@@ -155,7 +152,6 @@ class FormPassTest extends TestCase
         $container->addCompilerPass(new FormPass());
 
         $extDefinition = new Definition('Symfony\Component\Form\Extension\DependencyInjection\DependencyInjectionExtension');
-        $extDefinition->setPublic(true);
         $extDefinition->setArguments(array(
             new Reference('service_container'),
             array(),

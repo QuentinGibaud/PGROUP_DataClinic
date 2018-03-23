@@ -18,17 +18,13 @@ use Psr\SimpleCache\CacheException as SimpleCacheException;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
-use Symfony\Component\Cache\PruneableInterface;
-use Symfony\Component\Cache\ResettableInterface;
-use Symfony\Component\Cache\Traits\ProxyTrait;
 
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class Psr6Cache implements CacheInterface, PruneableInterface, ResettableInterface
+class Psr6Cache implements CacheInterface
 {
-    use ProxyTrait;
-
+    private $pool;
     private $createCacheItem;
 
     public function __construct(CacheItemPoolInterface $pool)

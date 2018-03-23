@@ -11,7 +11,6 @@
 
 namespace Symfony\Bundle\WebServerBundle\DependencyInjection;
 
-use Symfony\Bridge\Monolog\Formatter\ConsoleFormatter;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -26,9 +25,5 @@ class WebServerExtension extends Extension
     {
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('webserver.xml');
-
-        if (!class_exists(ConsoleFormatter::class)) {
-            $container->removeDefinition('web_server.command.server_log');
-        }
     }
 }

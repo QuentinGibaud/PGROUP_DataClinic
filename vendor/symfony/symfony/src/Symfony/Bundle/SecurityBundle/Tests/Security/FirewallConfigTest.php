@@ -29,7 +29,6 @@ class FirewallConfigTest extends TestCase
             'access_denied_url' => 'foo_access_denied_url',
             'access_denied_handler' => 'foo_access_denied_handler',
             'user_checker' => 'foo_user_checker',
-            'switch_user' => array('provider' => null, 'parameter' => '_switch_user', 'role' => 'ROLE_ALLOWED_TO_SWITCH'),
         );
 
         $config = new FirewallConfig(
@@ -43,8 +42,7 @@ class FirewallConfigTest extends TestCase
             $options['entry_point'],
             $options['access_denied_handler'],
             $options['access_denied_url'],
-            $listeners,
-            $options['switch_user']
+            $listeners
         );
 
         $this->assertSame('foo_firewall', $config->getName());
@@ -59,6 +57,5 @@ class FirewallConfigTest extends TestCase
         $this->assertSame($options['user_checker'], $config->getUserChecker());
         $this->assertTrue($config->allowsAnonymous());
         $this->assertSame($listeners, $config->getListeners());
-        $this->assertSame($options['switch_user'], $config->getSwitchUser());
     }
 }

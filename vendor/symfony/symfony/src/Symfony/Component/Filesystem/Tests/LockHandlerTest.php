@@ -16,9 +16,6 @@ use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\LockHandler;
 
-/**
- * @group legacy
- */
 class LockHandlerTest extends TestCase
 {
     /**
@@ -52,7 +49,7 @@ class LockHandlerTest extends TestCase
             $this->markTestSkipped('This test cannot run on Windows.');
         }
 
-        $lockPath = sys_get_temp_dir().'/'.uniqid('', true);
+        $lockPath = sys_get_temp_dir().'/'.uniqid();
         $e = null;
         $wrongMessage = null;
 

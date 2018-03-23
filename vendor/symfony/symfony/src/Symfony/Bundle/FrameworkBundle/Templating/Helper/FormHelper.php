@@ -23,8 +23,14 @@ use Symfony\Component\Form\FormView;
  */
 class FormHelper extends Helper
 {
+    /**
+     * @var FormRendererInterface
+     */
     private $renderer;
 
+    /**
+     * @param FormRendererInterface $renderer
+     */
     public function __construct(FormRendererInterface $renderer)
     {
         $this->renderer = $renderer;
@@ -43,13 +49,12 @@ class FormHelper extends Helper
      *
      * The theme format is "<Bundle>:<Controller>".
      *
-     * @param FormView     $view             A FormView instance
-     * @param string|array $themes           A theme or an array of theme
-     * @param bool         $useDefaultThemes If true, will use default themes defined in the renderer
+     * @param FormView     $view   A FormView instance
+     * @param string|array $themes A theme or an array of theme
      */
-    public function setTheme(FormView $view, $themes, $useDefaultThemes = true)
+    public function setTheme(FormView $view, $themes)
     {
-        $this->renderer->setTheme($view, $themes, $useDefaultThemes);
+        $this->renderer->setTheme($view, $themes);
     }
 
     /**
@@ -172,6 +177,8 @@ class FormHelper extends Helper
     /**
      * Renders the errors of the given view.
      *
+     * @param FormView $view The view to render the errors for
+     *
      * @return string The HTML markup
      */
     public function errors(FormView $view)
@@ -219,7 +226,7 @@ class FormHelper extends Helper
      * Check the token in your action using the same CSRF token id.
      *
      * <code>
-     * // $csrfProvider being an instance of Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface
+     * $csrfProvider = $this->get('security.csrf.token_generator');
      * if (!$csrfProvider->isCsrfTokenValid('rm_user_'.$user->getId(), $token)) {
      *     throw new \RuntimeException('CSRF attack detected.');
      * }
@@ -229,7 +236,7 @@ class FormHelper extends Helper
      *
      * @return string A CSRF token
      *
-     * @throws \BadMethodCallException when no CSRF provider was injected in the constructor
+     * @throws \BadMethodCallException When no CSRF provider was injected in the constructor.
      */
     public function csrfToken($tokenId)
     {

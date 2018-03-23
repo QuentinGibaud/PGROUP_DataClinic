@@ -15,8 +15,6 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
-use Symfony\Component\Cache\PruneableInterface;
-use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Component\Cache\Traits\PhpArrayTrait;
 
 /**
@@ -26,7 +24,7 @@ use Symfony\Component\Cache\Traits\PhpArrayTrait;
  * @author Titouan Galopin <galopintitouan@gmail.com>
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class PhpArrayAdapter implements AdapterInterface, PruneableInterface, ResettableInterface
+class PhpArrayAdapter implements AdapterInterface
 {
     use PhpArrayTrait;
 
@@ -39,8 +37,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
     public function __construct($file, AdapterInterface $fallbackPool)
     {
         $this->file = $file;
-        $this->pool = $fallbackPool;
-        $this->zendDetectUnicode = ini_get('zend.detect_unicode');
+        $this->fallbackPool = $fallbackPool;
         $this->createCacheItem = \Closure::bind(
             function ($key, $value, $isHit) {
                 $item = new CacheItem();
@@ -91,7 +88,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
             $this->initialize();
         }
         if (!isset($this->values[$key])) {
-            return $this->pool->getItem($key);
+            return $this->fallbackPool->getItem($key);
         }
 
         $value = $this->values[$key];
@@ -146,7 +143,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
             $this->initialize();
         }
 
-        return isset($this->values[$key]) || $this->pool->hasItem($key);
+        return isset($this->values[$key]) || $this->fallbackPool->hasItem($key);
     }
 
     /**
@@ -161,7 +158,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
             $this->initialize();
         }
 
-        return !isset($this->values[$key]) && $this->pool->deleteItem($key);
+        return !isset($this->values[$key]) && $this->fallbackPool->deleteItem($key);
     }
 
     /**
@@ -188,7 +185,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
         }
 
         if ($fallbackKeys) {
-            $deleted = $this->pool->deleteItems($fallbackKeys) && $deleted;
+            $deleted = $this->fallbackPool->deleteItems($fallbackKeys) && $deleted;
         }
 
         return $deleted;
@@ -203,7 +200,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
             $this->initialize();
         }
 
-        return !isset($this->values[$item->getKey()]) && $this->pool->save($item);
+        return !isset($this->values[$item->getKey()]) && $this->fallbackPool->save($item);
     }
 
     /**
@@ -215,7 +212,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
             $this->initialize();
         }
 
-        return !isset($this->values[$item->getKey()]) && $this->pool->saveDeferred($item);
+        return !isset($this->values[$item->getKey()]) && $this->fallbackPool->saveDeferred($item);
     }
 
     /**
@@ -223,10 +220,14 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
      */
     public function commit()
     {
-        return $this->pool->commit();
+        return $this->fallbackPool->commit();
     }
 
     /**
+     * Generator for items.
+     *
+     * @param array $keys
+     *
      * @return \Generator
      */
     private function generateItems(array $keys)
@@ -257,7 +258,7 @@ class PhpArrayAdapter implements AdapterInterface, PruneableInterface, Resettabl
         }
 
         if ($fallbackKeys) {
-            foreach ($this->pool->getItems($fallbackKeys) as $key => $item) {
+            foreach ($this->fallbackPool->getItems($fallbackKeys) as $key => $item) {
                 yield $key => $item;
             }
         }

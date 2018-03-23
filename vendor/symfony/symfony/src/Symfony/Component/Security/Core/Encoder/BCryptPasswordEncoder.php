@@ -17,13 +17,18 @@ use Symfony\Component\Security\Core\Exception\BadCredentialsException;
  * @author Elnur Abdurrakhimov <elnur@elnur.pro>
  * @author Terje Bråten <terje@braten.be>
  */
-class BCryptPasswordEncoder extends BasePasswordEncoder implements SelfSaltingEncoderInterface
+class BCryptPasswordEncoder extends BasePasswordEncoder
 {
     const MAX_PASSWORD_LENGTH = 72;
 
+    /**
+     * @var string
+     */
     private $cost;
 
     /**
+     * Constructor.
+     *
      * @param int $cost The algorithmic cost that should be used
      *
      * @throws \RuntimeException         When no BCrypt encoder is available

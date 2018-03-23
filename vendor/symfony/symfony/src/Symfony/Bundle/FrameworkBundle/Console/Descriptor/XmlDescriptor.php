@@ -133,6 +133,8 @@ class XmlDescriptor extends Descriptor
     /**
      * Writes DOM document.
      *
+     * @param \DOMDocument $dom
+     *
      * @return \DOMDocument|string
      */
     private function writeDocument(\DOMDocument $dom)
@@ -142,6 +144,8 @@ class XmlDescriptor extends Descriptor
     }
 
     /**
+     * @param RouteCollection $routes
+     *
      * @return \DOMDocument
      */
     private function getRouteCollectionDocument(RouteCollection $routes)
@@ -227,6 +231,8 @@ class XmlDescriptor extends Descriptor
     }
 
     /**
+     * @param ParameterBag $parameters
+     *
      * @return \DOMDocument
      */
     private function getContainerParametersDocument(ParameterBag $parameters)
@@ -318,7 +324,7 @@ class XmlDescriptor extends Descriptor
         foreach ($this->sortServiceIds($serviceIds) as $serviceId) {
             $service = $this->resolveServiceDefinition($builder, $serviceId);
 
-            if (($service instanceof Definition || $service instanceof Alias) && !($showPrivate || ($service->isPublic() && !$service->isPrivate()))) {
+            if (($service instanceof Definition || $service instanceof Alias) && !($showPrivate || $service->isPublic())) {
                 continue;
             }
 
@@ -364,7 +370,7 @@ class XmlDescriptor extends Descriptor
             }
         }
 
-        $serviceXML->setAttribute('public', $definition->isPublic() && !$definition->isPrivate() ? 'true' : 'false');
+        $serviceXML->setAttribute('public', $definition->isPublic() ? 'true' : 'false');
         $serviceXML->setAttribute('synthetic', $definition->isSynthetic() ? 'true' : 'false');
         $serviceXML->setAttribute('lazy', $definition->isLazy() ? 'true' : 'false');
         $serviceXML->setAttribute('shared', $definition->isShared() ? 'true' : 'false');
@@ -409,6 +415,8 @@ class XmlDescriptor extends Descriptor
     }
 
     /**
+     * @param array $arguments
+     *
      * @return \DOMNode[]
      */
     private function getArgumentNodes(array $arguments, \DOMDocument $dom)
@@ -469,12 +477,15 @@ class XmlDescriptor extends Descriptor
         }
 
         $aliasXML->setAttribute('service', (string) $alias);
-        $aliasXML->setAttribute('public', $alias->isPublic() && !$alias->isPrivate() ? 'true' : 'false');
+        $aliasXML->setAttribute('public', $alias->isPublic() ? 'true' : 'false');
 
         return $dom;
     }
 
     /**
+     * @param string $parameter
+     * @param array  $options
+     *
      * @return \DOMDocument
      */
     private function getContainerParameterDocument($parameter, $options = array())
@@ -519,6 +530,10 @@ class XmlDescriptor extends Descriptor
         return $dom;
     }
 
+    /**
+     * @param \DOMElement $element
+     * @param array       $eventListeners
+     */
     private function appendEventListenerDocument(EventDispatcherInterface $eventDispatcher, $event, \DOMElement $element, array $eventListeners)
     {
         foreach ($eventListeners as $listener) {

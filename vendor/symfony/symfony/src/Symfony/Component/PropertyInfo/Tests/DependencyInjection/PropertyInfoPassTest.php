@@ -54,16 +54,24 @@ class PropertyInfoPassTest extends TestCase
 
     public function testReturningEmptyArrayWhenNoService()
     {
-        $container = new ContainerBuilder();
-        $propertyInfoExtractorDefinition = $container->register('property_info')
-            ->setArguments(array(array(), array(), array(), array()));
+        $container = $this->getMockBuilder('Symfony\Component\DependencyInjection\ContainerBuilder')->setMethods(array('findTaggedServiceIds'))->getMock();
+
+        $container
+            ->expects($this->any())
+            ->method('findTaggedServiceIds')
+            ->will($this->returnValue(array()))
+        ;
 
         $propertyInfoPass = new PropertyInfoPass();
-        $propertyInfoPass->process($container);
 
-        $this->assertEquals(new IteratorArgument(array()), $propertyInfoExtractorDefinition->getArgument(0));
-        $this->assertEquals(new IteratorArgument(array()), $propertyInfoExtractorDefinition->getArgument(1));
-        $this->assertEquals(new IteratorArgument(array()), $propertyInfoExtractorDefinition->getArgument(2));
-        $this->assertEquals(new IteratorArgument(array()), $propertyInfoExtractorDefinition->getArgument(3));
+        $method = new \ReflectionMethod(
+            'Symfony\Component\PropertyInfo\DependencyInjection\PropertyInfoPass',
+            'findAndSortTaggedServices'
+        );
+        $method->setAccessible(true);
+
+        $actual = $method->invoke($propertyInfoPass, 'tag', $container);
+
+        $this->assertEquals(array(), $actual);
     }
 }

@@ -121,9 +121,9 @@ class FormHelperDivLayoutTest extends AbstractDivLayoutTest
         return (string) $this->engine->get('form')->end($view, $vars);
     }
 
-    protected function setTheme(FormView $view, array $themes, $useDefaultThemes = true)
+    protected function setTheme(FormView $view, array $themes)
     {
-        $this->engine->get('form')->setTheme($view, $themes, $useDefaultThemes);
+        $this->engine->get('form')->setTheme($view, $themes);
     }
 
     public static function themeBlockInheritanceProvider()

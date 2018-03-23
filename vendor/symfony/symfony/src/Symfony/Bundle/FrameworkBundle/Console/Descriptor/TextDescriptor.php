@@ -11,7 +11,6 @@
 
 namespace Symfony\Bundle\FrameworkBundle\Console\Descriptor;
 
-use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Alias;
@@ -194,7 +193,7 @@ class TextDescriptor extends Descriptor
             $definition = $this->resolveServiceDefinition($builder, $serviceId);
             if ($definition instanceof Definition) {
                 // filter out private services unless shown explicitly
-                if (!$showPrivate && (!$definition->isPublic() || $definition->isPrivate())) {
+                if (!$showPrivate && !$definition->isPublic()) {
                     unset($serviceIds[$key]);
                     continue;
                 }
@@ -212,7 +211,7 @@ class TextDescriptor extends Descriptor
                     }
                 }
             } elseif ($definition instanceof Alias) {
-                if (!$showPrivate && (!$definition->isPublic() || $definition->isPrivate())) {
+                if (!$showPrivate && !$definition->isPublic()) {
                     unset($serviceIds[$key]);
                     continue;
                 }
@@ -227,8 +226,7 @@ class TextDescriptor extends Descriptor
         $rawOutput = isset($options['raw_text']) && $options['raw_text'];
         foreach ($this->sortServiceIds($serviceIds) as $serviceId) {
             $definition = $this->resolveServiceDefinition($builder, $serviceId);
-
-            $styledServiceId = $rawOutput ? $serviceId : sprintf('<fg=cyan>%s</fg=cyan>', OutputFormatter::escape($serviceId));
+            $styledServiceId = $rawOutput ? $serviceId : sprintf('<fg=cyan>%s</fg=cyan>', $serviceId);
             if ($definition instanceof Definition) {
                 if ($showTag) {
                     foreach ($definition->getTag($showTag) as $key => $tag) {
@@ -302,7 +300,7 @@ class TextDescriptor extends Descriptor
             $tableRows[] = array('Calls', implode(', ', $callInformation));
         }
 
-        $tableRows[] = array('Public', $definition->isPublic() && !$definition->isPrivate() ? 'yes' : 'no');
+        $tableRows[] = array('Public', $definition->isPublic() ? 'yes' : 'no');
         $tableRows[] = array('Synthetic', $definition->isSynthetic() ? 'yes' : 'no');
         $tableRows[] = array('Lazy', $definition->isLazy() ? 'yes' : 'no');
         $tableRows[] = array('Shared', $definition->isShared() ? 'yes' : 'no');
@@ -310,8 +308,7 @@ class TextDescriptor extends Descriptor
         $tableRows[] = array('Autowired', $definition->isAutowired() ? 'yes' : 'no');
         $tableRows[] = array('Autoconfigured', $definition->isAutoconfigured() ? 'yes' : 'no');
 
-        // forward compatibility with DependencyInjection component in version 4.0
-        if (method_exists($definition, 'getAutowiringTypes') && $autowiringTypes = $definition->getAutowiringTypes(false)) {
+        if ($autowiringTypes = $definition->getAutowiringTypes(false)) {
             $tableRows[] = array('Autowiring Types', implode(', ', $autowiringTypes));
         }
 
@@ -420,6 +417,9 @@ class TextDescriptor extends Descriptor
         $this->writeText($this->formatCallable($callable), $options);
     }
 
+    /**
+     * @param array $array
+     */
     private function renderEventListenerTable(EventDispatcherInterface $eventDispatcher, $event, array $eventListeners, SymfonyStyle $io)
     {
         $tableHeaders = array('Order', 'Callable', 'Priority');

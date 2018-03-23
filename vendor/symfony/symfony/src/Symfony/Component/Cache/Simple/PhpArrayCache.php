@@ -14,8 +14,6 @@ namespace Symfony\Component\Cache\Simple;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Traits\PhpArrayTrait;
-use Symfony\Component\Cache\PruneableInterface;
-use Symfony\Component\Cache\ResettableInterface;
 
 /**
  * Caches items at warm up time using a PHP array that is stored in shared memory by OPCache since PHP 7.0.
@@ -24,7 +22,7 @@ use Symfony\Component\Cache\ResettableInterface;
  * @author Titouan Galopin <galopintitouan@gmail.com>
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInterface
+class PhpArrayCache implements CacheInterface
 {
     use PhpArrayTrait;
 
@@ -35,8 +33,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
     public function __construct($file, CacheInterface $fallbackPool)
     {
         $this->file = $file;
-        $this->pool = $fallbackPool;
-        $this->zendDetectUnicode = ini_get('zend.detect_unicode');
+        $this->fallbackPool = $fallbackPool;
     }
 
     /**
@@ -70,7 +67,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
             $this->initialize();
         }
         if (!isset($this->values[$key])) {
-            return $this->pool->get($key, $default);
+            return $this->fallbackPool->get($key, $default);
         }
 
         $value = $this->values[$key];
@@ -126,7 +123,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
             $this->initialize();
         }
 
-        return isset($this->values[$key]) || $this->pool->has($key);
+        return isset($this->values[$key]) || $this->fallbackPool->has($key);
     }
 
     /**
@@ -141,7 +138,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
             $this->initialize();
         }
 
-        return !isset($this->values[$key]) && $this->pool->delete($key);
+        return !isset($this->values[$key]) && $this->fallbackPool->delete($key);
     }
 
     /**
@@ -172,7 +169,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
         }
 
         if ($fallbackKeys) {
-            $deleted = $this->pool->deleteMultiple($fallbackKeys) && $deleted;
+            $deleted = $this->fallbackPool->deleteMultiple($fallbackKeys) && $deleted;
         }
 
         return $deleted;
@@ -190,7 +187,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
             $this->initialize();
         }
 
-        return !isset($this->values[$key]) && $this->pool->set($key, $value, $ttl);
+        return !isset($this->values[$key]) && $this->fallbackPool->set($key, $value, $ttl);
     }
 
     /**
@@ -218,7 +215,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
         }
 
         if ($fallbackValues) {
-            $saved = $this->pool->setMultiple($fallbackValues, $ttl) && $saved;
+            $saved = $this->fallbackPool->setMultiple($fallbackValues, $ttl) && $saved;
         }
 
         return $saved;
@@ -251,7 +248,7 @@ class PhpArrayCache implements CacheInterface, PruneableInterface, ResettableInt
         }
 
         if ($fallbackKeys) {
-            foreach ($this->pool->getMultiple($fallbackKeys, $default) as $key => $item) {
+            foreach ($this->fallbackPool->getMultiple($fallbackKeys, $default) as $key => $item) {
                 yield $key => $item;
             }
         }

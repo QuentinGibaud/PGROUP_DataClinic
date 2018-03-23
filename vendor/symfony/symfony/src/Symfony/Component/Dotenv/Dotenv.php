@@ -60,36 +60,20 @@ final class Dotenv
     /**
      * Sets values as environment variables (via putenv, $_ENV, and $_SERVER).
      *
-     * Note that existing environment variables are not overridden.
+     * Note that existing environment variables are never overridden.
      *
      * @param array $values An array of env variables
      */
     public function populate($values)
     {
-        $loadedVars = array_flip(explode(',', getenv('SYMFONY_DOTENV_VARS')));
-        unset($loadedVars['']);
-
         foreach ($values as $name => $value) {
-            $notHttpName = 0 !== strpos($name, 'HTTP_');
-            // don't check existence with getenv() because of thread safety issues
-            if (!isset($loadedVars[$name]) && (isset($_ENV[$name]) || (isset($_SERVER[$name]) && $notHttpName))) {
+            if (isset($_ENV[$name]) || isset($_SERVER[$name]) || false !== getenv($name)) {
                 continue;
             }
 
             putenv("$name=$value");
             $_ENV[$name] = $value;
-            if ($notHttpName) {
-                $_SERVER[$name] = $value;
-            }
-
-            $loadedVars[$name] = true;
-        }
-
-        if ($loadedVars) {
-            $loadedVars = implode(',', array_keys($loadedVars));
-            putenv("SYMFONY_DOTENV_VARS=$loadedVars");
-            $_ENV['SYMFONY_DOTENV_VARS'] = $loadedVars;
-            $_SERVER['SYMFONY_DOTENV_VARS'] = $loadedVars;
+            $_SERVER[$name] = $value;
         }
     }
 
@@ -112,7 +96,7 @@ final class Dotenv
         $this->end = strlen($this->data);
         $this->state = self::STATE_VARNAME;
         $this->values = array();
-        $name = '';
+        $name = $value = '';
 
         $this->skipEmptyLines();
 
@@ -173,7 +157,7 @@ final class Dotenv
 
     private function lexValue()
     {
-        if (preg_match('/[ \t]*+(?:#.*)?$/Am', $this->data, $matches, 0, $this->cursor)) {
+        if (preg_match('/[ \t]*+(?:#.*)?$/Am', $this->data, $matches, null, $this->cursor)) {
             $this->moveCursor($matches[0]);
             $this->skipEmptyLines();
 
@@ -184,110 +168,69 @@ final class Dotenv
             throw $this->createFormatException('Whitespace are not supported before the value');
         }
 
-        $v = '';
-
-        do {
-            if ("'" === $this->data[$this->cursor]) {
-                $value = '';
-                ++$this->cursor;
-
-                while ("\n" !== $this->data[$this->cursor]) {
-                    if ("'" === $this->data[$this->cursor]) {
+        $value = '';
+        $singleQuoted = false;
+        $notQuoted = false;
+        if ("'" === $this->data[$this->cursor]) {
+            $singleQuoted = true;
+            ++$this->cursor;
+            while ("\n" !== $this->data[$this->cursor]) {
+                if ("'" === $this->data[$this->cursor]) {
+                    if ($this->cursor + 1 === $this->end) {
                         break;
                     }
-                    $value .= $this->data[$this->cursor];
-                    ++$this->cursor;
-
-                    if ($this->cursor === $this->end) {
-                        throw $this->createFormatException('Missing quote to end the value');
+                    if ("'" !== $this->data[$this->cursor + 1]) {
+                        break;
                     }
+
+                    ++$this->cursor;
                 }
-                if ("\n" === $this->data[$this->cursor]) {
+                $value .= $this->data[$this->cursor];
+                ++$this->cursor;
+
+                if ($this->cursor === $this->end) {
                     throw $this->createFormatException('Missing quote to end the value');
-                }
-                ++$this->cursor;
-                $v .= $value;
-            } elseif ('"' === $this->data[$this->cursor]) {
-                $value = '';
-                ++$this->cursor;
-
-                while ('"' !== $this->data[$this->cursor] || ('\\' === $this->data[$this->cursor - 1] && '\\' !== $this->data[$this->cursor - 2])) {
-                    $value .= $this->data[$this->cursor];
-                    ++$this->cursor;
-
-                    if ($this->cursor === $this->end) {
-                        throw $this->createFormatException('Missing quote to end the value');
-                    }
-                }
-                if ("\n" === $this->data[$this->cursor]) {
-                    throw $this->createFormatException('Missing quote to end the value');
-                }
-                ++$this->cursor;
-                $value = str_replace(array('\\\\', '\\"', '\r', '\n'), array('\\', '"', "\r", "\n"), $value);
-                $resolvedValue = $value;
-                $resolvedValue = $this->resolveVariables($resolvedValue);
-                $resolvedValue = $this->resolveCommands($resolvedValue);
-                $v .= $resolvedValue;
-            } else {
-                $value = '';
-                $prevChr = $this->data[$this->cursor - 1];
-                while ($this->cursor < $this->end && !in_array($this->data[$this->cursor], array("\n", '"', "'"), true) && !((' ' === $prevChr || "\t" === $prevChr) && '#' === $this->data[$this->cursor])) {
-                    if ('\\' === $this->data[$this->cursor] && isset($this->data[$this->cursor + 1]) && ('"' === $this->data[$this->cursor + 1] || "'" === $this->data[$this->cursor + 1])) {
-                        ++$this->cursor;
-                    }
-
-                    $value .= $prevChr = $this->data[$this->cursor];
-
-                    if ('$' === $this->data[$this->cursor] && isset($this->data[$this->cursor + 1]) && '(' === $this->data[$this->cursor + 1]) {
-                        ++$this->cursor;
-                        $value .= '('.$this->lexNestedExpression().')';
-                    }
-
-                    ++$this->cursor;
-                }
-                $value = rtrim($value);
-                $resolvedValue = $value;
-                $resolvedValue = $this->resolveVariables($resolvedValue);
-                $resolvedValue = $this->resolveCommands($resolvedValue);
-
-                if ($resolvedValue === $value && preg_match('/\s+/', $value)) {
-                    throw $this->createFormatException('A value containing spaces must be surrounded by quotes');
-                }
-
-                $v .= $resolvedValue;
-
-                if ($this->cursor < $this->end && '#' === $this->data[$this->cursor]) {
-                    break;
                 }
             }
-        } while ($this->cursor < $this->end && "\n" !== $this->data[$this->cursor]);
+            if ("\n" === $this->data[$this->cursor]) {
+                throw $this->createFormatException('Missing quote to end the value');
+            }
+            ++$this->cursor;
+        } elseif ('"' === $this->data[$this->cursor]) {
+            ++$this->cursor;
+            while ('"' !== $this->data[$this->cursor] || ('\\' === $this->data[$this->cursor - 1] && '\\' !== $this->data[$this->cursor - 2])) {
+                $value .= $this->data[$this->cursor];
+                ++$this->cursor;
+
+                if ($this->cursor === $this->end) {
+                    throw $this->createFormatException('Missing quote to end the value');
+                }
+            }
+            if ("\n" === $this->data[$this->cursor]) {
+                throw $this->createFormatException('Missing quote to end the value');
+            }
+            ++$this->cursor;
+            $value = str_replace(array('\\\\', '\\"', '\r', '\n'), array('\\', '"', "\r", "\n"), $value);
+        } else {
+            $notQuoted = true;
+            $prevChr = $this->data[$this->cursor - 1];
+            while ($this->cursor < $this->end && "\n" !== $this->data[$this->cursor] && !((' ' === $prevChr || "\t" === $prevChr) && '#' === $this->data[$this->cursor])) {
+                $value .= $prevChr = $this->data[$this->cursor];
+                ++$this->cursor;
+            }
+            $value = rtrim($value);
+        }
 
         $this->skipEmptyLines();
 
-        return $v;
-    }
-
-    private function lexNestedExpression()
-    {
-        ++$this->cursor;
-        $value = '';
-
-        while ("\n" !== $this->data[$this->cursor] && ')' !== $this->data[$this->cursor]) {
-            $value .= $this->data[$this->cursor];
-
-            if ('(' === $this->data[$this->cursor]) {
-                $value .= $this->lexNestedExpression().')';
-            }
-
-            ++$this->cursor;
-
-            if ($this->cursor === $this->end) {
-                throw $this->createFormatException('Missing closing parenthesis.');
-            }
+        $currentValue = $value;
+        if (!$singleQuoted) {
+            $value = $this->resolveVariables($value);
+            $value = $this->resolveCommands($value);
         }
 
-        if ("\n" === $this->data[$this->cursor]) {
-            throw $this->createFormatException('Missing closing parenthesis.');
+        if ($notQuoted && $currentValue == $value && preg_match('/\s+/', $value)) {
+            throw $this->createFormatException('A value containing spaces must be surrounded by quotes');
         }
 
         return $value;
@@ -295,7 +238,7 @@ final class Dotenv
 
     private function skipEmptyLines()
     {
-        if (preg_match('/(?:\s*+(?:#[^\n]*+)?+)++/A', $this->data, $match, 0, $this->cursor)) {
+        if (preg_match('/(?:\s*+(?:#[^\n]*+)?+)++/A', $this->data, $match, null, $this->cursor)) {
             $this->moveCursor($match[0]);
         }
     }
@@ -367,15 +310,7 @@ final class Dotenv
             }
 
             $name = $matches[3];
-            if (isset($this->values[$name])) {
-                $value = $this->values[$name];
-            } elseif (isset($_SERVER[$name]) && 0 !== strpos($name, 'HTTP_')) {
-                $value = $_SERVER[$name];
-            } elseif (isset($_ENV[$name])) {
-                $value = $_ENV[$name];
-            } else {
-                $value = (string) getenv($name);
-            }
+            $value = isset($this->values[$name]) ? $this->values[$name] : (isset($_ENV[$name]) ? isset($_ENV[$name]) : (string) getenv($name));
 
             if (!$matches[2] && isset($matches[4])) {
                 $value .= '}';

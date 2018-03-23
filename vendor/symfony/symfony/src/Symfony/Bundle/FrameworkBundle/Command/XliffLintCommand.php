@@ -11,6 +11,9 @@
 
 namespace Symfony\Bundle\FrameworkBundle\Command;
 
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Translation\Command\XliffLintCommand as BaseLintCommand;
 
 /**
@@ -19,46 +22,40 @@ use Symfony\Component\Translation\Command\XliffLintCommand as BaseLintCommand;
  * @author Grégoire Pineau <lyrixx@lyrixx.info>
  * @author Robin Chalas <robin.chalas@gmail.com>
  * @author Javier Eguiluz <javier.eguiluz@gmail.com>
- *
- * @final since version 3.4
  */
-class XliffLintCommand extends BaseLintCommand
+class XliffLintCommand extends Command
 {
-    protected static $defaultName = 'lint:xliff';
-
-    public function __construct($name = null, $directoryIteratorProvider = null, $isReadableProvider = null)
-    {
-        if (func_num_args()) {
-            @trigger_error(sprintf('Passing a constructor argument in "%s" is deprecated since Symfony 3.4 and will be removed in 4.0. If the command was registered by convention, make it a service instead.', __METHOD__), E_USER_DEPRECATED);
-        }
-
-        if (null === $directoryIteratorProvider) {
-            $directoryIteratorProvider = function ($directory, $default) {
-                if (!is_dir($directory)) {
-                    $directory = $this->getApplication()->getKernel()->locateResource($directory);
-                }
-
-                return $default($directory);
-            };
-        }
-
-        if (null === $isReadableProvider) {
-            $isReadableProvider = function ($fileOrDirectory, $default) {
-                return 0 === strpos($fileOrDirectory, '@') || $default($fileOrDirectory);
-            };
-        }
-
-        parent::__construct($name, $directoryIteratorProvider, $isReadableProvider);
-    }
+    private $command;
 
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
-        parent::configure();
+        $this->setName('lint:xliff');
 
-        $this->setHelp($this->getHelp().<<<'EOF'
+        if (!$this->isEnabled()) {
+            return;
+        }
+
+        $directoryIteratorProvider = function ($directory, $default) {
+            if (!is_dir($directory)) {
+                $directory = $this->getApplication()->getKernel()->locateResource($directory);
+            }
+
+            return $default($directory);
+        };
+
+        $isReadableProvider = function ($fileOrDirectory, $default) {
+            return 0 === strpos($fileOrDirectory, '@') || $default($fileOrDirectory);
+        };
+
+        $this->command = new BaseLintCommand(null, $directoryIteratorProvider, $isReadableProvider);
+
+        $this
+            ->setDescription($this->command->getDescription())
+            ->setDefinition($this->command->getDefinition())
+            ->setHelp($this->command->getHelp().<<<'EOF'
 
 Or find all files in a bundle:
 
@@ -66,5 +63,18 @@ Or find all files in a bundle:
 
 EOF
             );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isEnabled()
+    {
+        return class_exists(BaseLintCommand::class);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        return $this->command->execute($input, $output);
     }
 }

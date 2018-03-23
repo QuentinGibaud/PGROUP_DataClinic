@@ -33,6 +33,12 @@ class Firewall implements EventSubscriberInterface
     private $dispatcher;
     private $exceptionListeners;
 
+    /**
+     * Constructor.
+     *
+     * @param FirewallMapInterface     $map        A FirewallMapInterface instance
+     * @param EventDispatcherInterface $dispatcher An EventDispatcherInterface instance
+     */
     public function __construct(FirewallMapInterface $map, EventDispatcherInterface $dispatcher)
     {
         $this->map = $map;
@@ -40,6 +46,11 @@ class Firewall implements EventSubscriberInterface
         $this->exceptionListeners = new \SplObjectStorage();
     }
 
+    /**
+     * Handles security.
+     *
+     * @param GetResponseEvent $event An GetResponseEvent instance
+     */
     public function onKernelRequest(GetResponseEvent $event)
     {
         if (!$event->isMasterRequest()) {
@@ -53,7 +64,14 @@ class Firewall implements EventSubscriberInterface
             $exceptionListener->register($this->dispatcher);
         }
 
-        return $this->handleRequest($event, $listeners);
+        // initiate the listener chain
+        foreach ($listeners as $listener) {
+            $listener->handle($event);
+
+            if ($event->hasResponse()) {
+                break;
+            }
+        }
     }
 
     public function onKernelFinishRequest(FinishRequestEvent $event)
@@ -75,16 +93,5 @@ class Firewall implements EventSubscriberInterface
             KernelEvents::REQUEST => array('onKernelRequest', 8),
             KernelEvents::FINISH_REQUEST => 'onKernelFinishRequest',
         );
-    }
-
-    protected function handleRequest(GetResponseEvent $event, $listeners)
-    {
-        foreach ($listeners as $listener) {
-            $listener->handle($event);
-
-            if ($event->hasResponse()) {
-                break;
-            }
-        }
     }
 }

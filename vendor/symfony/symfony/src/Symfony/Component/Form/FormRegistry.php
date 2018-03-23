@@ -12,7 +12,6 @@
 namespace Symfony\Component\Form;
 
 use Symfony\Component\Form\Exception\ExceptionInterface;
-use Symfony\Component\Form\Exception\LogicException;
 use Symfony\Component\Form\Exception\UnexpectedTypeException;
 use Symfony\Component\Form\Exception\InvalidArgumentException;
 
@@ -45,9 +44,9 @@ class FormRegistry implements FormRegistryInterface
      */
     private $resolvedTypeFactory;
 
-    private $checkedTypes = array();
-
     /**
+     * Constructor.
+     *
      * @param FormExtensionInterface[]         $extensions          An array of FormExtensionInterface
      * @param ResolvedFormTypeFactoryInterface $resolvedTypeFactory The factory for resolved form types
      *
@@ -82,14 +81,11 @@ class FormRegistry implements FormRegistryInterface
 
             if (!$type) {
                 // Support fully-qualified class names
-                if (!class_exists($name)) {
-                    throw new InvalidArgumentException(sprintf('Could not load type "%s": class does not exist.', $name));
+                if (class_exists($name) && in_array('Symfony\Component\Form\FormTypeInterface', class_implements($name))) {
+                    $type = new $name();
+                } else {
+                    throw new InvalidArgumentException(sprintf('Could not load type "%s"', $name));
                 }
-                if (!is_subclass_of($name, 'Symfony\Component\Form\FormTypeInterface')) {
-                    throw new InvalidArgumentException(sprintf('Could not load type "%s": class does not implement "Symfony\Component\Form\FormTypeInterface".', $name));
-                }
-
-                $type = new $name();
             }
 
             $this->types[$name] = $this->resolveType($type);
@@ -112,29 +108,18 @@ class FormRegistry implements FormRegistryInterface
         $parentType = $type->getParent();
         $fqcn = get_class($type);
 
-        if (isset($this->checkedTypes[$fqcn])) {
-            $types = implode(' > ', array_merge(array_keys($this->checkedTypes), array($fqcn)));
-            throw new LogicException(sprintf('Circular reference detected for form type "%s" (%s).', $fqcn, $types));
-        }
-
-        $this->checkedTypes[$fqcn] = true;
-
-        try {
-            foreach ($this->extensions as $extension) {
-                $typeExtensions = array_merge(
-                    $typeExtensions,
-                    $extension->getTypeExtensions($fqcn)
-                );
-            }
-
-            return $this->resolvedTypeFactory->createResolvedType(
-                $type,
+        foreach ($this->extensions as $extension) {
+            $typeExtensions = array_merge(
                 $typeExtensions,
-                $parentType ? $this->getType($parentType) : null
+                $extension->getTypeExtensions($fqcn)
             );
-        } finally {
-            unset($this->checkedTypes[$fqcn]);
         }
+
+        return $this->resolvedTypeFactory->createResolvedType(
+            $type,
+            $typeExtensions,
+            $parentType ? $this->getType($parentType) : null
+        );
     }
 
     /**

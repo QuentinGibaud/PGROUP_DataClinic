@@ -22,6 +22,7 @@ class ExtensionPassTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.debug', false);
+        $container->setParameter('kernel.root_dir', __DIR__);
 
         $container->register('twig.app_variable', '\Symfony\Bridge\Twig\AppVariable');
         $container->register('templating', '\Symfony\Bundle\TwigBundle\TwigEngine');

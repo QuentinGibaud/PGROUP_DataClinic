@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+class_exists('Twig_Profiler_Profile');
+
 class Twig_Extension_Profiler extends Twig_Extension
 {
     private $actives = array();
@@ -38,7 +40,11 @@ class Twig_Extension_Profiler extends Twig_Extension
     {
         return array(new Twig_Profiler_NodeVisitor_Profiler(get_class($this)));
     }
+
+    public function getName()
+    {
+        return 'profiler';
+    }
 }
 
 class_alias('Twig_Extension_Profiler', 'Twig\Extension\ProfilerExtension', false);
-class_exists('Twig_Profiler_Profile');

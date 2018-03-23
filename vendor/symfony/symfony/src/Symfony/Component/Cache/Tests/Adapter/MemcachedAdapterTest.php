@@ -17,6 +17,7 @@ use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 class MemcachedAdapterTest extends AdapterTestCase
 {
     protected $skippedTests = array(
+        'testExpiration' => 'Testing expiration slows down the test suite',
         'testHasItemReturnsFalseWhenDeferredItemIsExpired' => 'Testing expiration slows down the test suite',
         'testDefaultLifeTime' => 'Testing expiration slows down the test suite',
     );
@@ -160,35 +161,5 @@ class MemcachedAdapterTest extends AdapterTestCase
                 0,
             );
         }
-    }
-
-    /**
-     * @dataProvider provideDsnWithOptions
-     */
-    public function testDsnWithOptions($dsn, array $options, array $expectedOptions)
-    {
-        $client = MemcachedAdapter::createConnection($dsn, $options);
-
-        foreach ($expectedOptions as $option => $expect) {
-            $this->assertSame($expect, $client->getOption($option));
-        }
-    }
-
-    public function provideDsnWithOptions()
-    {
-        if (!class_exists('\Memcached')) {
-            self::markTestSkipped('Extension memcached required.');
-        }
-
-        yield array(
-            'memcached://localhost:11222?retry_timeout=10',
-            array(\Memcached::OPT_RETRY_TIMEOUT => 8),
-            array(\Memcached::OPT_RETRY_TIMEOUT => 10),
-        );
-        yield array(
-            'memcached://localhost:11222?socket_recv_size=1&socket_send_size=2',
-            array(\Memcached::OPT_RETRY_TIMEOUT => 8),
-            array(\Memcached::OPT_SOCKET_RECV_SIZE => 1, \Memcached::OPT_SOCKET_SEND_SIZE => 2, \Memcached::OPT_RETRY_TIMEOUT => 8),
-        );
     }
 }

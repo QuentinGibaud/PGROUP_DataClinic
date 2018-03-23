@@ -24,7 +24,7 @@ class NotEqualToValidatorTest extends AbstractComparisonValidatorTestCase
         return new NotEqualToValidator();
     }
 
-    protected function createConstraint(array $options = null)
+    protected function createConstraint(array $options)
     {
         return new NotEqualTo($options);
     }
@@ -47,16 +47,6 @@ class NotEqualToValidatorTest extends AbstractComparisonValidatorTestCase
             array(new \DateTime('2001-01-01 UTC'), '2000-01-01 UTC'),
             array(new ComparisonTest_Class(6), new ComparisonTest_Class(5)),
             array(null, 1),
-        );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function provideValidComparisonsToPropertyPath()
-    {
-        return array(
-            array(0),
         );
     }
 
