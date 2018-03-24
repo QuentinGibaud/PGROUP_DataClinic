@@ -20,7 +20,7 @@ class ResumeService extends Controller
         $login = $this->container->getParameter('database_user');
         $password = $this->container->getParameter('database_password');
         $conn = new \PDO("mysql:host=".$host.";dbname=".$namedb, $login, $password);
-        $query = $conn->prepare("SELECT titre_projet, nom_inv, resume_projet FROM infoform");
+        $query = $conn->prepare("SELECT titre_projet, nom_inv, resume_projet,est_publiable FROM infoform");
         $query->setFetchMode(\PDO::FETCH_ASSOC);
         $query->execute();
         $rows = $query->fetchAll();
