@@ -11,6 +11,8 @@ use Symfony\Component\Routing\RouterInterface;
 use AppBundle\Service\ResumeService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 
+//Controller to call the webservice for the CHU
+
 class ResumeServiceController extends Controller
 {
     /**
