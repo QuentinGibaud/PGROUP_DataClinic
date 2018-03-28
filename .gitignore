@@ -7,3 +7,4 @@
 /web/assets/
 /web/bundles/
 /.php_cs.cache
+/web/*.zip

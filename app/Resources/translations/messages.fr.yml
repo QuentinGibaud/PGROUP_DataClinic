@@ -14,8 +14,10 @@ page:
         title: Portail des demandes de la<br>Clinique des données
     legal:
         title: Mentions légales
+        description: Mentions légales du site
     resumeProjects:
         button: Télécharger les résumés des projets ici
         helpText: N'oubliez pas de fermer votre navigateur pour vous déconnecter
     useTerms:
         title: Conditions générales d'utilisation
+        description: CGU du site
